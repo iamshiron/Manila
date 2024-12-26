@@ -1,21 +1,48 @@
+/*
 const workspace = Manila.getWorkspace()
-const project = Manila.getProject()
 const config = Manila.getBuildConfig()
 
-Manila.log(`Building ${project.name()} -> ${project.getBinDir()}`)
+print(`Building ${project.name()} -> ${project.getBinDir()}`)
 
-project.configure(c => {
-	c.name('Server').version('1.0.0').description('Server for the game')
-})
-compileHint('static')
+version('1.0.0')
+description('Server project')
 
-dependencies([compile(project(':Core'))])
+const mainSrcSet = Manila.sourceSet('main')
+mainSrcSet.addFiles(project.getDir().join('src/main'))
 
-task('build').execute(() => {
+const mainIncludeSet = Manila.includeSet('main')
+mainIncludeSet.addFiles(project.getDir().join('src/main'))
+
+dependencies([
+	compile(project('Core')),
+	compile(git('github.com/gabime/spdlog', 'v1.x')),
+	include(git('github.com/g-truc/glm', 'master')).as('GLM')
+])
+
+addSourceSet(mainSrcSet)
+addIncludeSet(Manila.Public, mainIncludeSet)
+
+addIncludeDir(Manila.Private, workspace.getDir().join('include'))
+addIncludeDir(Manila.Public, mainSrcSet.getDir())
+
+Manila.task('build').execute(() => {
 	Manila.build(project, config)
 })
-task('run')
+Manila.task('run')
 	.after('build')
 	.execute(() => {
 		Manila.run(project)
+	})
+*/
+
+print('Server')
+
+Manila.task('build').execute(() => {
+	print('Building Server...')
+})
+
+Manila.task('run')
+	.after(':build')
+	.execute(() => {
+		print('Running Server...')
 	})

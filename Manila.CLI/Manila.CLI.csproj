@@ -1,20 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Manila\Manila.csproj" />
-    <ProjectReference Include="..\Manila.API\Manila.API.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Manila\Manila.csproj" />
+		<PackageReference Include="Spectre.Console" Version="0.49.1" />
+		<PackageReference Include="Spectre.Console.CLI" Version="0.49.1" />
 
-  <ItemGroup>
-    <PackageReference Include="Spectre.Console" Version="0.49.2-preview.0.7" />
-    <PackageReference Include="Spectre.Console.Cli" Version="0.49.2-preview.0.7" />
-  </ItemGroup>
-
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-
+		<PackageReference Include="FIGlet.Net" Version="1.1.2" />
+	</ItemGroup>
 </Project>
