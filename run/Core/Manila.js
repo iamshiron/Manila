@@ -19,8 +19,3 @@ dependencies([
 
 Manila.apply('shiron.manila:manilacpp:console')
 const project = Manila.getProject()
-
-define('MANILA_CORE')
-build()
-
-print('Core')

@@ -13,6 +13,8 @@ public abstract class ProjectApplicable : PluginComponent {
 	public abstract string getID();
 
 	public virtual void onApply(ScriptContext context, Project project) {
+		Logger.debug("Applying " + getID() + " to project " + project.name);
+
 		var methods = GetType()
 			.GetMethods()
 			.Where(m => m.GetCustomAttributes(typeof(ScriptFunction), true).Length > 0)
@@ -27,15 +29,16 @@ public abstract class ProjectApplicable : PluginComponent {
 			var parameters = method.GetParameters();
 			if (method.ReturnType == typeof(void)) {
 				Logger.debug("Adding method: " + method.Name);
-				var delegateType = parameters.Length switch {
+				var paramTypes = parameters.Select(p => p.ParameterType).ToArray();
+				Type delegateType = paramTypes.Length switch {
 					0 => typeof(Action),
-					1 => typeof(Action<>).MakeGenericType(parameters[0].ParameterType),
-					2 => typeof(Action<,>).MakeGenericType(parameters[0].ParameterType, parameters[1].ParameterType),
-					_ => null
+					1 => typeof(Action<>).MakeGenericType(paramTypes),
+					2 => typeof(Action<,>).MakeGenericType(paramTypes),
+					3 => typeof(Action<,,>).MakeGenericType(paramTypes),
+					4 => typeof(Action<,,,>).MakeGenericType(paramTypes),
+					_ => throw new NotSupportedException($"Methods with {paramTypes.Length} parameters are not supported")
 				};
-				if (delegateType != null) {
-					context.engine.AddHostObject(method.Name, method.CreateDelegate(delegateType, this));
-				}
+				project.addMethod(method.Name, Delegate.CreateDelegate(delegateType, this, method));
 			}
 		}
 	}

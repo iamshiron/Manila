@@ -17,10 +17,6 @@ public class Manila {
 		if (context.instance.currentProject == null) throw new Exception("Not in a project context!");
 
 		Project project = context.instance.currentProject;
-		foreach (var c in context.instance.currentProject.appliedComponents) {
-			((ProjectApplicable) c).onApply(context, project);
-		}
-
 		return project;
 	}
 	public BuildConfig getBuildConfig() {
@@ -49,13 +45,22 @@ public class Manila {
 		Logger.debug("Plugin qualifier: " + pluginQualifier);
 		Logger.debug("Component name: " + componentName);
 
+		Project project = getProject();
+
 		ExtensionAPI instance = ExtensionAPI.getInstance();
 		foreach (ManilaPlugin plugin in instance.plugins) {
 			if (plugin.getQualifier().Equals(pluginQualifier)) {
 				Logger.debug("Found plugin: " + plugin.getQualifier());
 				foreach (Type t in plugin.components) {
-					PluginComponent comp = (PluginComponent) Activator.CreateInstance(t, getProject());
-					getProject().appliedComponents.Add(comp);
+					PluginComponent comp = (PluginComponent) Activator.CreateInstance(t, project);
+					string componentID = comp.getID();
+
+					if (project.appliedComponents.Contains(componentID)) {
+						Logger.debug("Component " + componentID + " already applied to project " + project.name);
+						continue;
+					}
+					project.appliedComponents.Add(componentID);
+					((ProjectApplicable) comp).onApply(context, project);
 				}
 			}
 		}

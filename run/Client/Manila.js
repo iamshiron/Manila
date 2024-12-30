@@ -23,7 +23,5 @@ Manila.task('run')
 Manila.apply('shiron.manila:manilacpp:console')
 const project = Manila.getProject()
 
-define('MANILA_CLIENT')
-build()
-
-print('Client')
+project.define('DEBUG')
+project.build()

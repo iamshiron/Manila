@@ -24,6 +24,7 @@ public class ConsoleApp : ProjectApplicable {
 
 	[ScriptFunction]
 	public void define(string define) {
+		Console.WriteLine("Adding define: " + define);
 		defines.Add(define);
 	}
 
