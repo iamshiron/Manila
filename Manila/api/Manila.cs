@@ -48,21 +48,37 @@ public class Manila {
 		Project project = getProject();
 
 		ExtensionAPI instance = ExtensionAPI.getInstance();
+
+		bool pluginApplied = false;
+		bool plguinFound = false;
 		foreach (ManilaPlugin plugin in instance.plugins) {
+			if (pluginApplied) break; // If plugin already applied, break
+
 			if (plugin.getQualifier().Equals(pluginQualifier)) {
 				Logger.debug("Found plugin: " + plugin.getQualifier());
+				plguinFound = true;
+
+				// Iterate through components of found plugin
 				foreach (Type t in plugin.components) {
 					PluginComponent comp = (PluginComponent) Activator.CreateInstance(t, project);
 					string componentID = comp.getID();
+
+					if (!componentID.Equals(componentName)) continue; // Skip if component name does not match
 
 					if (project.appliedComponents.Contains(componentID)) {
 						Logger.debug("Component " + componentID + " already applied to project " + project.name);
 						continue;
 					}
+
 					project.appliedComponents.Add(componentID);
 					((ProjectApplicable) comp).onApply(context, project);
+					pluginApplied = true;
+					break;
 				}
 			}
 		}
+
+		if (!plguinFound) throw new Exception("Plugin not found: " + pluginQualifier);
+		if (!pluginApplied) throw new Exception("Component not found: " + componentName + " in plugin " + pluginQualifier);
 	}
 }
