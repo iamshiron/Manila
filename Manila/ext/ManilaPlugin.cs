@@ -22,8 +22,17 @@ public abstract class ManilaPlugin {
 		return $"ManilaPlugin<{group}.{name}@{version}>";
 	}
 
-	protected void info(params object[] message) {
+	public void info(params object[] message) {
 		Logger.pluginInfo(this, message);
+	}
+	public void warn(params object[] message) {
+		Logger.pluginWarn(this, message);
+	}
+	public void error(params object[] message) {
+		Logger.pluginError(this, message);
+	}
+	public void debug(params object[] message) {
+		Logger.pluginDebug(this, message);
 	}
 
 	protected void register(Type component) {

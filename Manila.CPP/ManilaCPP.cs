@@ -3,6 +3,9 @@
 namespace Shiron.Manila.ManilaCPP;
 
 public class ManilaCPP : ManilaPlugin {
+	[PluginInstance]
+	public static ManilaCPP? instance { get; private set; } = null;
+
 	public ManilaCPP() : base("shiron.manila", "manilacpp", "1.0.0") { }
 
 	public override void init() {

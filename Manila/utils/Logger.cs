@@ -123,7 +123,7 @@ public static class Logger {
 		log(messages, LogLevel.Debug);
 	}
 
-	public static void warning(params object[] messages) {
+	public static void warn(params object[] messages) {
 		if (!verbose || quiet) return;
 		log(messages, LogLevel.Warning);
 	}
@@ -142,7 +142,7 @@ public static class Logger {
 		log(messages, LogLevel.Debug, plugin);
 	}
 
-	public static void pluginWarning(ManilaPlugin plugin, params object[] messages) {
+	public static void pluginWarn(ManilaPlugin plugin, params object[] messages) {
 		if (!verbose || quiet) return;
 		log(messages, LogLevel.Warning, plugin);
 	}
