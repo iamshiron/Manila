@@ -23,6 +23,10 @@ Manila.task('run')
 Manila.apply('shiron.manila:manilacpp:console')
 const project = Manila.getProject()
 
+const sourceSet = ManilaCPP.sourceSet()
+sourceSet.include(project.getPath().join('src/main').files())
+project.sourceSet('main', sourceSet)
+
 project.define('DEBUG')
 project.build()
 project.toolChain('GCC')

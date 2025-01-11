@@ -9,13 +9,14 @@ public class Manila {
 	public static string VERSION = "1.0.0";
 	public string root { get; private set; }
 
-	public API.Workspace workspace { get; } = new();
+	public API.Workspace workspace { get; }
 	public API.Project? currentProject { get; private set; } = null;
 
 	private Manila() {
 		root = Directory.GetCurrentDirectory();
+		workspace = new API.Workspace(root);
 
-		if (!File.Exists("Manila.js")) {
+		if (!System.IO.File.Exists("Manila.js")) {
 			throw new Exception("No root build script found");
 		}
 
@@ -42,8 +43,9 @@ public class Manila {
 		if (root) {
 			currentProject = workspace;
 		} else {
-			string name = Path.GetDirectoryName(Path.GetRelativePath(this.root, path)).ToLower().Replace("/", ":").Replace("\\", ":");
-			currentProject = new API.Project(name);
+			string projectPath = Path.GetDirectoryName(Path.GetRelativePath(this.root, path));
+			string name = projectPath.ToLower().Replace("/", ":").Replace("\\", ":");
+			currentProject = new API.Project(name, Path.Combine(this.root, projectPath));
 			workspace.projects.Add(name, currentProject);
 		}
 

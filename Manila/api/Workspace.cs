@@ -3,7 +3,11 @@ using System.Text;
 namespace Shiron.Manila.API;
 
 public class Workspace : Project {
-	public Workspace() : base("") {
+	/// <summary>
+	/// Creates a new workspace
+	/// </summary>
+	/// <param name="path">The absolute path</param>
+	public Workspace(string path) : base("", path) {
 	}
 
 	public Dictionary<string, Project> projects { get; } = new();

@@ -33,6 +33,23 @@ public class Manila {
 	}
 
 	/// <summary>
+	/// Creates a new directory object
+	/// </summary>
+	/// <param name="path">The path</param>
+	/// <returns>The created directory object</returns>
+	public Dir dir(string path) {
+		return new Dir(path);
+	}
+	/// <summary>
+	/// Creates a new file object
+	/// </summary>
+	/// <param name="path">The path</param>
+	/// <returns>The created file opbject</returns>
+	public File file(string path) {
+		return new File(path);
+	}
+
+	/// <summary>
 	/// Applies a plugin to the current project
 	/// </summary>
 	/// <param name="name">The plugin name</param>

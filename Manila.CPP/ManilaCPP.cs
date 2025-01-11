@@ -18,4 +18,9 @@ public class ManilaCPP : ManilaPlugin {
 	public override void release() {
 		Console.WriteLine("Releasing CPP...");
 	}
+
+	[ScriptFunction]
+	public SourceSet sourceSet() {
+		return new SourceSet();
+	}
 }
