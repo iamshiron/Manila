@@ -19,7 +19,7 @@ public class Project : DynamicObject, IScriptableObject {
 	}
 
 	public void addMethod(string name, Delegate impl) {
-		if (dynamicMethods.ContainsKey(name)) throw new Exception($"Method '{name}' already exists.");
+		if (dynamicMethods.ContainsKey(name)) { Logger.warning($"Method '{name}' already exists, overwriting."); return; } // Temporary to check if I can just ignore that a duplicate method has been added
 		dynamicMethods.Add(name, impl);
 	}
 
@@ -42,6 +42,20 @@ public class Project : DynamicObject, IScriptableObject {
 		Logger.debug($"TryInvokeMember: {binder.Name}");
 
 		if (dynamicMethods.TryGetValue(binder.Name, out var method)) {
+			Logger.debug($"Invoking method '{binder.Name}'");
+
+			var methodParams = method.Method.GetParameters();
+			for (int i = 0; i < methodParams.Length; ++i) {
+				var param = methodParams[i];
+				Logger.debug($"Parameter: {param.Name}");
+
+				// Convert enum strings to enum values
+				if (param.ParameterType.IsEnum) {
+					var type = param.ParameterType;
+					args[i] = Enum.Parse(type, args[i].ToString());
+				}
+			}
+
 			result = method.DynamicInvoke(args);
 			return true;
 		}

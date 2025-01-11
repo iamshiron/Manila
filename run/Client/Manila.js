@@ -25,3 +25,4 @@ const project = Manila.getProject()
 
 project.define('DEBUG')
 project.build()
+project.toolChain('GCC')
