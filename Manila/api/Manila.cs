@@ -20,6 +20,10 @@ public class Manila {
 		Project project = context.instance.currentProject;
 		return project;
 	}
+	public UnresolvedProject getProject(string identifier) {
+		return new UnresolvedProject(identifier);
+	}
+
 	public BuildConfig getBuildConfig() {
 		return new BuildConfig();
 	}
@@ -71,5 +75,12 @@ public class Manila {
 			else throw new Exception("Invalid type");
 		}
 		return set;
+	}
+
+	public DependencyStaticCompile compile(UnresolvedProject project) {
+		return new DependencyStaticCompile(project);
+	}
+	public DependencyStaticLink link(string libFile) {
+		return new DependencyStaticLink(libFile);
 	}
 }

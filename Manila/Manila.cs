@@ -32,7 +32,13 @@ public class Manila {
 
 		foreach (var file in files) {
 			runScript(file);
+		}
 
+		foreach (var project in workspace.projects.Values) {
+			Logger.debug("Project: " + project.name);
+			foreach (var dep in project._dependencies) {
+				dep.resolve();
+			}
 		}
 	}
 

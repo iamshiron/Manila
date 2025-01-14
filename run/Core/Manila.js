@@ -10,24 +10,19 @@ version('1.0.0')
 description('Demo Project Client')
 
 sourceSets({
-	main: Manila.sourceSet(project.getLocation().join('src/main')),
-	test: Manila.sourceSet(project.getLocation().join('src/test'))
+	main: Manila.sourceSet(project.getPath().join('src/main/**/*.cpp')),
+	test: Manila.sourceSet(project.getPath().join('src/test/**/*.cpp'))
 })
 
-dependencies([Manila.compile(Manila.getProject(':Core'))], Manila.link('opengl32.lib'))
+dependencies([])
 
-Manila.task('build').executes(() => {
+Manila.task('build').execute(() => {
+	project.build()
 	Manila.build(workspace, project, config)
 })
 
 Manila.task('test')
-	.dependsOn('build')
-	.executes(() => {
+	.after('build')
+	.execute(() => {
 		Manila.test(workspace, project, config)
-	})
-
-Manila.task('run')
-	.dependsOn('test')
-	.executes(() => {
-		Manila.run(workspace, project, config)
 	})

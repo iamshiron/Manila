@@ -2,7 +2,7 @@ const project = Manila.getProject()
 const workspace = Manila.getWorkspace()
 const config = Manila.getBuildConfig()
 
-Manila.apply('manila.staticlib')
+Manila.apply('manila.console')
 language('C++')
 cppStandard('C++23')
 
@@ -10,24 +10,25 @@ version('1.0.0')
 description('Demo Project Client')
 
 sourceSets({
-	main: Manila.sourceSet(project.getLocation().join('src/main/**/*.cpp')),
-	test: Manila.sourceSet(project.getLocation().join('src/test/**/*.cpp'))
+	main: Manila.sourceSet(project.getPath().join('src/main/**/*.cpp')),
+	test: Manila.sourceSet(project.getPath().join('src/test/**/*.cpp'))
 })
 
-dependencies([Manila.compile(Manila.getProject(':Core'))], Manila.link('opengl32.lib'))
+dependencies([Manila.compile(Manila.getProject(':core')), Manila.link('opengl32.lib')])
 
-Manila.task('build').executes(() => {
+Manila.task('build').execute(() => {
+	project.build()
 	Manila.build(workspace, project, config)
 })
 
 Manila.task('test')
-	.dependsOn('build')
-	.executes(() => {
+	.after('build')
+	.execute(() => {
 		Manila.test(workspace, project, config)
 	})
 
 Manila.task('run')
-	.dependsOn('test')
-	.executes(() => {
+	.after('test')
+	.execute(() => {
 		Manila.run(workspace, project, config)
 	})

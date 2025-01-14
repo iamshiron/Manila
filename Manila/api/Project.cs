@@ -26,6 +26,8 @@ public class Project : DynamicObject, IScriptableObject {
 	[ScriptAttribute]
 	public string description { get; private set; } = "";
 
+	public List<IDependency> _dependencies { get; private set; } = new();
+
 	/// <summary>
 	/// Creates a new project
 	/// </summary>
@@ -65,8 +67,6 @@ public class Project : DynamicObject, IScriptableObject {
 		return dynamicMethods.Keys;
 	}
 	public override bool TryInvokeMember(InvokeMemberBinder binder, object?[] args, out object result) {
-		Logger.debug($"TryInvokeMember: {binder.Name}");
-
 		if (dynamicMethods.TryGetValue(binder.Name, out var method)) {
 			Logger.debug($"Invoking method '{binder.Name}'");
 
@@ -92,6 +92,8 @@ public class Project : DynamicObject, IScriptableObject {
 
 	[ScriptFunction]
 	public void sourceSets(object obj) {
+		Logger.debug(getIdentifier());
+
 		Logger.info("sourceSets");
 		Console.WriteLine(obj.GetType());
 
@@ -110,7 +112,18 @@ public class Project : DynamicObject, IScriptableObject {
 		}
 	}
 
-	public Dir getLocation() {
-		return path;
+	[ScriptFunction]
+	public void build() {
+		Logger.info("Building project " + name);
+	}
+
+	[ScriptFunction]
+	public void dependencies(dynamic deps) {
+		foreach (var dep in deps) _dependencies.Add(dep);
+	}
+
+	public string getIdentifier() {
+		string relativeDir = Path.GetRelativePath(Shiron.Manila.Manila.getInstance().root, path.path);
+		return ":" + relativeDir.Replace(Path.DirectorySeparatorChar, ':').ToLower();
 	}
 }
