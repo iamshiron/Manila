@@ -46,7 +46,7 @@ public class GradleStyleLogger {
 				clearLine();
 			}
 
-			AnsiConsole.MarkupLine(message);
+			AnsiConsole.WriteLine(message);
 			_statusLine = Console.CursorTop;
 
 			if (!string.IsNullOrEmpty(_currentTask)) {

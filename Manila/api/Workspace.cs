@@ -59,6 +59,6 @@ public class Workspace : Project {
 		}
 
 		AddTaskToSchedule(name);
-		return schedule;
+		return schedule.Distinct().ToList();
 	}
 }
