@@ -10,8 +10,8 @@ version('1.0.0')
 description('Demo Project Client')
 
 sourceSets({
-	main: Manila.sourceSet(project.getLocation().join('src/main')),
-	test: Manila.sourceSet(project.getLocation().join('src/test'))
+	main: Manila.sourceSet(project.getLocation().join('src/main/**/*.cpp')),
+	test: Manila.sourceSet(project.getLocation().join('src/test/**/*.cpp'))
 })
 
 dependencies([Manila.compile(Manila.getProject(':Core'))], Manila.link('opengl32.lib'))

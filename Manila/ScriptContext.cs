@@ -13,6 +13,7 @@ public class ScriptContext {
 	public Manila instance { get; private set; }
 	public API.Project project { get; private set; }
 
+
 	public ScriptContext(API.Project project, Manila manila, string scriptPath) {
 		instance = manila;
 		path = scriptPath;

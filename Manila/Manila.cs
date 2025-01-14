@@ -12,13 +12,18 @@ public class Manila {
 	public API.Workspace workspace { get; }
 	public API.Project? currentProject { get; private set; } = null;
 
+	public bool initialized { get; private set; } = false;
+
 	private Manila() {
 		root = Directory.GetCurrentDirectory();
 		workspace = new API.Workspace(root);
+	}
 
+	public void init() {
 		if (!System.IO.File.Exists("Manila.js")) {
 			throw new Exception("No root build script found");
 		}
+		initialized = true;
 
 		runScript("Manila.js", true);
 		var files = Directory.GetFiles(".", "Manila.js", SearchOption.AllDirectories)
@@ -27,9 +32,8 @@ public class Manila {
 
 		foreach (var file in files) {
 			runScript(file);
-		}
 
-		instance = this;
+		}
 	}
 
 	public static Manila getInstance() {

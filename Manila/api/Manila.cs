@@ -1,3 +1,4 @@
+using Microsoft.ClearScript;
 using Shiron.Manila.Ext;
 using Shiron.Manila.Utils;
 
@@ -57,7 +58,18 @@ public class Manila {
 		Logger.debug("Applying: " + name);
 	}
 
-	public SourceSet sourceSet(Dir d) {
-		return new SourceSet(d);
+	/// <summary>
+	/// Create a new source set at the root directory
+	/// </summary>
+	/// <param name="d">The directories to automatically include</param>
+	/// <returns>A newly created source set</returns>
+	public SourceSet sourceSet(params object[] d) {
+		SourceSet set = new();
+		foreach (object o in d) {
+			if (o is string) set.include((string) o);
+			else if (o is Dir) set.include((Dir) o);
+			else throw new Exception("Invalid type");
+		}
+		return set;
 	}
 }

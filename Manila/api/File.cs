@@ -23,4 +23,8 @@ public class File {
 	public string get() {
 		return this.path;
 	}
+
+	public static implicit operator string(File f) {
+		return f.path;
+	}
 }

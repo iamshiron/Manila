@@ -48,6 +48,7 @@ Logger.debug("Executing task: " + task);
 
 try {
 	Manila instance = Manila.getInstance();
+	instance.init();
 	instance.workspace.runTask(task);
 } catch (Exception e) {
 	Console.WriteLine(e.Message);

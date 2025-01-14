@@ -1,5 +1,6 @@
 using System.Dynamic;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.Remoting;
 using System.Text;
 using Microsoft.ClearScript;
 using Shiron.Manila.Ext;
@@ -92,7 +93,21 @@ public class Project : DynamicObject, IScriptableObject {
 	[ScriptFunction]
 	public void sourceSets(object obj) {
 		Logger.info("sourceSets");
-		Logger.info(obj);
+		Console.WriteLine(obj.GetType());
+
+		Dictionary<string, SourceSet> sets = new();
+		foreach (var pair in (IDictionary<string, object>) obj) {
+			sets.Add(pair.Key, (SourceSet) pair.Value);
+		}
+
+		foreach (var pair in sets) {
+			Logger.info($"SourceSet: {pair.Key}");
+			Logger.info(pair.Value.fileGlobs);
+
+			foreach (var file in pair.Value.files()) {
+				Logger.info($"File: {file.path}");
+			}
+		}
 	}
 
 	public Dir getLocation() {

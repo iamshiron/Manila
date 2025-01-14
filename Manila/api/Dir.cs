@@ -39,4 +39,8 @@ public class Dir {
 	public string get() {
 		return this.path;
 	}
+
+	public static implicit operator string(Dir d) {
+		return d.path;
+	}
 }
