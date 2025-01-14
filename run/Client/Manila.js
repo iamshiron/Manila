@@ -3,7 +3,7 @@ const workspace = Manila.getWorkspace()
 const config = Manila.getBuildConfig()
 
 Manila.apply('manila.console')
-language('C++')
+language(Language.Cpp)
 cppStandard('C++23')
 
 version('1.0.0')

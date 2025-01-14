@@ -18,13 +18,15 @@ public class Project : DynamicObject, IScriptableObject {
 	public Dictionary<string, Delegate> dynamicMethods { get; } = new();
 
 	[ScriptAttribute]
-	public string language { get; private set; } = "cpp";
+	public Language language { get; private set; } = Language.Cpp;
 	[ScriptAttribute]
 	public string cppStandard { get; private set; } = "c++17";
 	[ScriptAttribute]
 	public string version { get; private set; } = "1.0.0";
 	[ScriptAttribute]
 	public string description { get; private set; } = "";
+	[ScriptAttribute]
+	public ToolChain toolchain { get; private set; } = ToolChain.Clang;
 
 	public List<IDependency> _dependencies { get; private set; } = new();
 
@@ -113,7 +115,6 @@ public class Project : DynamicObject, IScriptableObject {
 
 	[ScriptFunction]
 	public void build() {
-		Logger.info("Building project " + name);
 	}
 
 	[ScriptFunction]

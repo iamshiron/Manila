@@ -2,6 +2,7 @@ using System.Reflection;
 using Microsoft.ClearScript;
 using Microsoft.ClearScript.V8;
 using Microsoft.VisualBasic;
+using Shiron.Manila.API;
 using Shiron.Manila.Ext;
 using Shiron.Manila.Utils;
 
@@ -39,16 +40,25 @@ public class ScriptContext {
 			engine.AddHostObject(plugin.GetType().Name, plugin);
 		}
 
+		Dictionary<string, Type> enums = new();
+
 		// Add Script Attributes
 		foreach (var prop in project.GetType().GetProperties()) {
+			var type = prop.PropertyType;
+
 			var attr = prop.GetCustomAttributes(typeof(ScriptAttribute), false);
 			if (attr.Length > 0) {
-				Type delegateType = typeof(Action<>).MakeGenericType(prop.PropertyType);
+				Type delegateType = typeof(Action<>).MakeGenericType(type);
 				var setValue = (Action<object>) ((value) => {
 					prop.SetValue(this.project, value);
 				});
 
 				engine.AddHostObject(prop.Name, setValue);
+			}
+
+			if (type.IsEnum) {
+				if (!enums.ContainsKey(type.Name))
+					enums.Add(type.Name, type);
 			}
 		}
 
@@ -67,7 +77,20 @@ public class ScriptContext {
 				};
 
 				engine.AddHostObject(method.Name, Delegate.CreateDelegate(delegateType, project, method));
+
+				foreach (var param in method.GetParameters()) {
+					if (param.ParameterType.IsEnum) {
+						if (!enums.ContainsKey(param.ParameterType.Name))
+							enums.Add(param.ParameterType.Name, param.ParameterType);
+					}
+				}
 			}
+		}
+
+		// Add Enums
+		foreach (var pair in enums) {
+			Logger.info("Adding enum: " + pair.Key);
+			engine.AddHostType(pair.Key, pair.Value);
 		}
 	}
 
