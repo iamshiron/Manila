@@ -25,11 +25,9 @@ public abstract class ProjectApplicable : PluginComponent {
 				?? Array.Empty<System.Reflection.MethodInfo>());
 
 		foreach (var method in methods) {
-			Logger.debug("Checking method: " + method.Name);
-			var parameters = method.GetParameters();
 			if (method.ReturnType == typeof(void)) {
 				Logger.debug("Adding method: " + method.Name);
-				var paramTypes = parameters.Select(p => p.ParameterType).ToArray();
+				var paramTypes = method.GetParameters().Select(p => p.ParameterType).ToArray();
 				Type delegateType = paramTypes.Length switch {
 					0 => typeof(Action),
 					1 => typeof(Action<>).MakeGenericType(paramTypes),

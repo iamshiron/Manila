@@ -49,7 +49,7 @@ public class Manila {
 			workspace.projects.Add(name, currentProject);
 		}
 
-		ScriptContext context = new ScriptContext(this, path);
+		ScriptContext context = new ScriptContext(currentProject, this, path);
 		context.init();
 		context.execute();
 		currentProject = null;

@@ -16,6 +16,15 @@ public class Project : DynamicObject, IScriptableObject {
 	public List<string> appliedPlugins { get; } = new();
 	public Dictionary<string, Delegate> dynamicMethods { get; } = new();
 
+	[ScriptAttribute]
+	public string language { get; private set; } = "cpp";
+	[ScriptAttribute]
+	public string cppStandard { get; private set; } = "c++17";
+	[ScriptAttribute]
+	public string version { get; private set; } = "1.0.0";
+	[ScriptAttribute]
+	public string description { get; private set; } = "";
+
 	/// <summary>
 	/// Creates a new project
 	/// </summary>
@@ -78,5 +87,15 @@ public class Project : DynamicObject, IScriptableObject {
 
 		Logger.debug($"Method '{binder.Name}' not found.");
 		return base.TryInvokeMember(binder, args, out result);
+	}
+
+	[ScriptFunction]
+	public void sourceSets(object obj) {
+		Logger.info("sourceSets");
+		Logger.info(obj);
+	}
+
+	public Dir getLocation() {
+		return path;
 	}
 }
