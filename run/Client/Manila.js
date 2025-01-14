@@ -1,32 +1,33 @@
-/*
-const workspace = Manila.getWorkspace()
 const project = Manila.getProject()
+const workspace = Manila.getWorkspace()
 const config = Manila.getBuildConfig()
 
-print(`Building ${project.name()} -> ${project.getBinDir()}`)
+Manila.apply('manila.staticlib')
+language('C++')
+cppStandard('C++23')
 
 version('1.0.0')
-description('Server for the game')
+description('Demo Project Client')
 
-dependencies([compile(project(':Core')), link('opengl32.lib')])
-
-Manila.task('build').execute(() => {
-	Manila.build(project, config)
+sourceSets({
+	main: Manila.sourceSet(project.getLocation().join('src/main')),
+	test: Manila.sourceSet(project.getLocation().join('src/test'))
 })
-Manila.task('run')
-	.after('build')
-	.execute(() => {
-		Manila.run(project)
+
+dependencies([Manila.compile(Manila.getProject(':Core'))], Manila.link('opengl32.lib'))
+
+Manila.task('build').executes(() => {
+	Manila.build(workspace, project, config)
+})
+
+Manila.task('test')
+	.dependsOn('build')
+	.executes(() => {
+		Manila.test(workspace, project, config)
 	})
-*/
 
-Manila.apply('shiron.manila:manilacpp:console')
-const project = Manila.getProject()
-
-const sourceSet = ManilaCPP.sourceSet()
-sourceSet.include(project.getPath().join('src/main').files())
-project.sourceSet('main', sourceSet)
-
-project.define('DEBUG')
-project.build()
-project.toolChain('GCC')
+Manila.task('run')
+	.dependsOn('test')
+	.executes(() => {
+		Manila.run(workspace, project, config)
+	})

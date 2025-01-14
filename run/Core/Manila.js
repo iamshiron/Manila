@@ -1,21 +1,33 @@
-/*
-const workspace = Manila.getWorkspace()
 const project = Manila.getProject()
+const workspace = Manila.getWorkspace()
 const config = Manila.getBuildConfig()
 
-print(`Building ${project.name()} -> ${project.getBinDir()}`)
+Manila.apply('manila.staticlib')
+language('C++')
+cppStandard('C++23')
 
 version('1.0.0')
-description('Server for the game')
+description('Demo Project Client')
 
-compileHint('static')
+sourceSets({
+	main: Manila.sourceSet(project.getLocation().join('src/main')),
+	test: Manila.sourceSet(project.getLocation().join('src/test'))
+})
 
-dependencies([
-	compile(git('github.com/gabime/spdlog', 'v1.x')),
-	compile(git('github.com/boostorg/boost', 'master')),
-	include(git('github.com/g-truc/glm')).as('glm')
-])
-*/
+dependencies([Manila.compile(Manila.getProject(':Core'))], Manila.link('opengl32.lib'))
 
-Manila.apply('shiron.manila:manilacpp:console')
-const project = Manila.getProject()
+Manila.task('build').executes(() => {
+	Manila.build(workspace, project, config)
+})
+
+Manila.task('test')
+	.dependsOn('build')
+	.executes(() => {
+		Manila.test(workspace, project, config)
+	})
+
+Manila.task('run')
+	.dependsOn('test')
+	.executes(() => {
+		Manila.run(workspace, project, config)
+	})
