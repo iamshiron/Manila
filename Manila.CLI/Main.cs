@@ -20,6 +20,12 @@ if (!quiet) {
 	lines[lines.Length - 2] = lines[lines.Length - 2] + $" [magenta]v{Manila.VERSION}[/]";
 	AnsiConsole.MarkupLine($"[blue]{string.Join("\n", lines)}[/]");
 }
+
+var logger = new GradleStyleLogger();
+AnsiConsole.MarkupLine("[skyblue1]Build Started At " + DateTime.Now + "[/]\n");
+logger.start();
+logger.log("Configuring");
+
 Logger.init(verbose, quiet);
 
 Logger.debug("Discovering plugins...");
@@ -48,9 +54,20 @@ Logger.debug("Executing task: " + task);
 
 try {
 	Manila instance = Manila.getInstance();
-	instance.init();
-	instance.workspace.runTask(task);
+	instance.init((object[] message) => {
+		logger.subLog(string.Join(" ", message));
+	});
+
+	List<Shiron.Manila.API.Task> tasks = instance.workspace.getSchedule(task);
+
+	foreach (var t in tasks) {
+		logger.log(t.name);
+		t.run(false);
+	}
+
+	logger.stop();
 } catch (Exception e) {
-	Console.WriteLine(e.Message);
-	Console.WriteLine(e.StackTrace);
+	logger.stop(false, e);
 }
+
+AnsiConsole.MarkupLine("\n[skyblue1]Build Finished At " + DateTime.Now + "[/]");

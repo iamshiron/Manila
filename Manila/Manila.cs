@@ -19,19 +19,19 @@ public class Manila {
 		workspace = new API.Workspace(root);
 	}
 
-	public void init() {
+	public void init(Action<object[]>? scriptLogger = null) {
 		if (!System.IO.File.Exists("Manila.js")) {
 			throw new Exception("No root build script found");
 		}
 		initialized = true;
 
-		runScript("Manila.js", true);
+		runScript("Manila.js", scriptLogger ?? Logger.scriptLog, true);
 		var files = Directory.GetFiles(".", "Manila.js", SearchOption.AllDirectories)
 			.Where(f => !Path.GetFullPath(f).Equals(Path.GetFullPath("Manila.js")))
 			.ToList();
 
 		foreach (var file in files) {
-			runScript(file);
+			runScript(file, scriptLogger ?? Logger.scriptLog);
 		}
 
 		foreach (var project in workspace.projects.Values) {
@@ -47,7 +47,7 @@ public class Manila {
 		return instance;
 	}
 
-	public void runScript(string path, bool root = false) {
+	public void runScript(string path, Action<object[]> scriptLogger, bool root = false) {
 		Logger.debug("Running script: " + path);
 
 		if (root) {
@@ -59,7 +59,7 @@ public class Manila {
 			workspace.projects.Add(name, currentProject);
 		}
 
-		ScriptContext context = new ScriptContext(currentProject, this, path);
+		ScriptContext context = new ScriptContext(currentProject, this, path, scriptLogger);
 		context.init();
 		context.execute();
 		currentProject = null;

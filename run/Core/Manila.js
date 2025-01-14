@@ -7,7 +7,7 @@ language('C++')
 cppStandard('C++23')
 
 version('1.0.0')
-description('Demo Project Client')
+description('Demo Project Core')
 
 sourceSets({
 	main: Manila.sourceSet(project.getPath().join('src/main/**/*.cpp')),
@@ -17,8 +17,7 @@ sourceSets({
 dependencies([])
 
 Manila.task('build').execute(() => {
-	project.build()
-	Manila.build(workspace, project, config)
+	print('Building core...')
 })
 
 Manila.task('test')

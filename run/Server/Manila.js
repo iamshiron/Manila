@@ -7,7 +7,7 @@ language('C++')
 cppStandard('C++23')
 
 version('1.0.0')
-description('Demo Project Client')
+description('Demo Project Server')
 
 sourceSets({
 	main: Manila.sourceSet(project.getPath().join('src/main/**/*.cpp')),
@@ -17,17 +17,17 @@ sourceSets({
 dependencies([Manila.compile(Manila.getProject(':core'))])
 
 Manila.task('build').execute(() => {
-	// Manila.build(workspace, project, config)
+	print('Building server...')
 })
 
 Manila.task('test')
 	.after(':build')
 	.execute(() => {
-		//Manila.test(workspace, project, config)
+		print('Runnin tests...')
 	})
 
 Manila.task('run')
 	.after(':test')
 	.execute(() => {
-		//Manila.run(workspace, project, config)
+		print('Running server...')
 	})

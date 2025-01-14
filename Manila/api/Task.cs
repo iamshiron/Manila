@@ -3,8 +3,8 @@ using Shiron.Manila.Utils;
 namespace Shiron.Manila.API;
 
 public class Task {
-	private readonly string name;
-	private readonly List<string> dependencies = new();
+	public readonly string name;
+	public readonly List<string> dependencies = new();
 	private Action? action;
 	private readonly ScriptContext context;
 	private readonly Project project;
@@ -30,10 +30,11 @@ public class Task {
 		return this;
 	}
 
-	internal void run() {
-		foreach (var dep in dependencies) {
-			context.instance.workspace.runTask(dep);
-		}
+	public void run(bool runDependencies = true) {
+		if (runDependencies)
+			foreach (var dep in dependencies) {
+				context.instance.workspace.runTask(dep);
+			}
 
 		action?.Invoke();
 	}

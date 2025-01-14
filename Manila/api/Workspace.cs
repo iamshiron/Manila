@@ -1,4 +1,5 @@
 using System.Text;
+using Shiron.Manila.Utils;
 
 namespace Shiron.Manila.API;
 
@@ -27,5 +28,37 @@ public class Workspace : Project {
 		string project = string.Join(":", parts.Take(parts.Length - 1));
 		if (!projects.ContainsKey(project)) throw new Exception($"Project '{project}' not found.");
 		projects[project].runTask(parts[parts.Length - 1]);
+	}
+
+
+	public List<Task> getSchedule(string name) {
+		var schedule = new List<Task>();
+		var visited = new HashSet<string>();
+
+		void AddTaskToSchedule(string taskName) {
+			if (visited.Contains(taskName)) return;
+			visited.Add(taskName);
+
+			string[] parts = taskName.Split(':');
+			Task task;
+
+			if (parts.Length < 2) {
+				if (!tasks.ContainsKey(taskName)) throw new Exception($"Task '{taskName}' not found.");
+				task = tasks[taskName];
+			} else {
+				string project = string.Join(":", parts.Take(parts.Length - 1));
+				if (!projects.ContainsKey(project)) throw new Exception($"Project '{project}' not found.");
+				task = projects[project].tasks[parts[parts.Length - 1]];
+			}
+
+			foreach (var dep in task.dependencies) {
+				AddTaskToSchedule(dep);
+			}
+
+			schedule.Add(task);
+		}
+
+		AddTaskToSchedule(name);
+		return schedule;
 	}
 }

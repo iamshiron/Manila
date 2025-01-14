@@ -13,12 +13,15 @@ public class ScriptContext {
 	public Manila instance { get; private set; }
 	public API.Project project { get; private set; }
 
+	private readonly Action<object[]> scriptLogger;
 
-	public ScriptContext(API.Project project, Manila manila, string scriptPath) {
+
+	public ScriptContext(API.Project project, Manila manila, string scriptPath, Action<object[]> scriptLogger) {
 		instance = manila;
 		path = scriptPath;
 		engine = new V8ScriptEngine();
 		this.project = project;
+		this.scriptLogger = scriptLogger;
 	}
 
 
@@ -26,7 +29,10 @@ public class ScriptContext {
 		Logger.debug("Initializing script context...");
 
 		engine.AddHostObject("Manila", new API.Manila(this));
-		engine.AddHostObject("print", Logger.scriptLog);
+		engine.AddHostObject("print", (params object[] args) => {
+			scriptLogger(args);
+		});
+
 
 		foreach (var plugin in ExtensionAPI.getInstance().plugins) {
 			Logger.debug("Adding plugin: " + plugin.GetType().Name);

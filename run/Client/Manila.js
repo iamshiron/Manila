@@ -17,8 +17,7 @@ sourceSets({
 dependencies([Manila.compile(Manila.getProject(':core')), Manila.link('opengl32.lib')])
 
 Manila.task('build').execute(() => {
-	project.build()
-	Manila.build(workspace, project, config)
+	print('Building client...')
 })
 
 Manila.task('test')

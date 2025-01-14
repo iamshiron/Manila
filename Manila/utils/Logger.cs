@@ -152,7 +152,7 @@ public static class Logger {
 		log(messages, LogLevel.Error, plugin);
 	}
 
-	internal static void print(params object[] messages) {
+	public static void print(params object[] messages) {
 		if (quiet) return;
 		log(messages, LogLevel.Headless);
 	}

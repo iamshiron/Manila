@@ -95,7 +95,6 @@ public class Project : DynamicObject, IScriptableObject {
 		Logger.debug(getIdentifier());
 
 		Logger.info("sourceSets");
-		Console.WriteLine(obj.GetType());
 
 		Dictionary<string, SourceSet> sets = new();
 		foreach (var pair in (IDictionary<string, object>) obj) {
