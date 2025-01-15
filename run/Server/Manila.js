@@ -32,7 +32,8 @@ Manila.task('test')
 	})
 
 Manila.task('run')
-	.after(':test')
+	.after(':build')
 	.execute(() => {
 		print('Running server...')
+		Manila.run(project)
 	})

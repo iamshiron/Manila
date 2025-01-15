@@ -98,4 +98,8 @@ public class ScriptContext {
 	public void execute() {
 		engine.Execute(System.IO.File.ReadAllText(path));
 	}
+
+	public void scriptLog(params object[] args) {
+		scriptLogger(args);
+	}
 }

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.ClearScript;
 using Shiron.Manila.API.Toolchain;
 using Shiron.Manila.Ext;
@@ -90,6 +91,32 @@ public class Manila {
 			new Clang().compile(project);
 		} else {
 			throw new Exception("Unsupported toolchain: " + project.toolchain);
+		}
+	}
+	public void run(Project project) {
+		Logger.debug("Running project: " + project.name);
+		Logger.debug("BinDir: " + project.binDir);
+		Logger.debug("RunDir: " + project.runDir);
+
+		var startInfo = new ProcessStartInfo() {
+			FileName = project.binDir + "/" + project.name + ".exe",
+			Arguments = "",
+			UseShellExecute = false,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true
+		};
+
+		using (Process process = Process.Start(startInfo)) {
+			process.OutputDataReceived += (sender, e) => {
+				if (e.Data != null) context.scriptLog(e.Data);
+			};
+			process.ErrorDataReceived += (sender, e) => {
+				if (e.Data != null) context.scriptLog(e.Data);
+			};
+
+			process.BeginOutputReadLine();
+			process.BeginErrorReadLine();
+			process.WaitForExit();
 		}
 	}
 }
