@@ -1,4 +1,3 @@
-#include "Server.hpp"
 
 namespace manila {
 	class Server {

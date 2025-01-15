@@ -19,8 +19,12 @@ public class Dir {
 		return new File(Path.Combine(this.path, name));
 	}
 
-	public Dir join(params string[] path) {
-		return new Dir(Path.Combine(this.path, Path.Combine(path)));
+	public Dir join(params object[] path) {
+		var newPath = this.path;
+		foreach (var p in path) {
+			newPath = Path.Combine(newPath, p.ToString());
+		}
+		return new Dir(newPath);
 	}
 	public Dir join(Dir dir) {
 		return new Dir(Path.Combine(this.path, dir.path));

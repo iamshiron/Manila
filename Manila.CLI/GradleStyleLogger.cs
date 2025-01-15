@@ -33,7 +33,7 @@ public class GradleStyleLogger {
 			Console.CursorVisible = true;
 
 			if (exception != null) {
-				AnsiConsole.MarkupLine($"\n[red]{exception.Message}[/]");
+				AnsiConsole.MarkupLine($"\n[red]{Markup.Escape(exception.Message)}[/]");
 				AnsiConsole.MarkupLine($"[grey]{Markup.Escape(exception.StackTrace ?? "")}[/]");
 			}
 		}

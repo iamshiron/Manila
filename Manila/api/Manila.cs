@@ -1,4 +1,5 @@
 using Microsoft.ClearScript;
+using Shiron.Manila.API.Toolchain;
 using Shiron.Manila.Ext;
 using Shiron.Manila.Utils;
 
@@ -25,7 +26,7 @@ public class Manila {
 	}
 
 	public BuildConfig getBuildConfig() {
-		return new BuildConfig();
+		return context.instance.workspace.buildConfig;
 	}
 
 	/// <summary>
@@ -82,5 +83,13 @@ public class Manila {
 	}
 	public DependencyStaticLink link(string libFile) {
 		return new DependencyStaticLink(libFile);
+	}
+
+	public void build(Workspace workspace, Project project, BuildConfig config) {
+		if (project.toolchain.Equals(EToolChain.clang)) {
+			new Clang().compile(project);
+		} else {
+			throw new Exception("Unsupported toolchain: " + project.toolchain);
+		}
 	}
 }

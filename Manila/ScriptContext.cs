@@ -34,7 +34,6 @@ public class ScriptContext {
 			scriptLogger(args);
 		});
 
-
 		foreach (var plugin in ExtensionAPI.getInstance().plugins) {
 			Logger.debug("Adding plugin: " + plugin.GetType().Name);
 			engine.AddHostObject(plugin.GetType().Name, plugin);
@@ -56,7 +55,8 @@ public class ScriptContext {
 				engine.AddHostObject(prop.Name, setValue);
 			}
 
-			if (type.IsEnum) {
+			var typeAttr = type.GetCustomAttributes(typeof(ScriptEnum), false);
+			if (typeAttr.Length > 0) {
 				if (!enums.ContainsKey(type.Name))
 					enums.Add(type.Name, type);
 			}
@@ -76,6 +76,7 @@ public class ScriptContext {
 					_ => throw new NotSupportedException($"Methods with {paramTypes.Length} parameters are not supported")
 				};
 
+				Logger.debug("Adding function: " + method.Name);
 				engine.AddHostObject(method.Name, Delegate.CreateDelegate(delegateType, project, method));
 
 				foreach (var param in method.GetParameters()) {
@@ -90,7 +91,7 @@ public class ScriptContext {
 		// Add Enums
 		foreach (var pair in enums) {
 			Logger.info("Adding enum: " + pair.Key);
-			engine.AddHostType(pair.Key, pair.Value);
+			engine.AddHostType(pair.Key[1..], pair.Value);
 		}
 	}
 

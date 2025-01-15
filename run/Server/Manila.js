@@ -3,12 +3,16 @@ const workspace = Manila.getWorkspace()
 const config = Manila.getBuildConfig()
 
 Manila.apply('manila.console')
-language(Language.Cpp)
+language(Language.cpp)
 cppStandard('C++23')
+toolchain(ToolChain.clang)
 
 version('1.0.0')
 description('Demo Project Server')
-toolchain(ToolChain.Clang)
+
+binDir(project.getPath().join('bin', config.getPlatform(), `${config.getConfig()}-${config.getArchitecture()}`, project.getName()))
+objDir(project.getPath().join('bin-int', config.getPlatform(), `${config.getConfig()}-${config.getArchitecture()}`, project.getName()))
+runDir(project.getPath().join('bin', config.getPlatform(), `${config.getConfig()}-${config.getArchitecture()}`, project.getName()))
 
 sourceSets({
 	main: Manila.sourceSet(project.getPath().join('src/main/**/*.cpp')),
@@ -18,8 +22,7 @@ sourceSets({
 dependencies([Manila.compile(Manila.getProject(':core'))])
 
 Manila.task('build').execute(() => {
-	project.build()
-	print('Building server...')
+	Manila.build(workspace, project, config)
 })
 
 Manila.task('test')

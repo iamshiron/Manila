@@ -4,13 +4,15 @@ using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 using Shiron.Manila;
 using Shiron.Manila.Utils;
 
+namespace Shiron.Manila.API;
+
 public class SourceSet {
 	public List<string> fileGlobs { get; private set; } = new List<string>();
 	public List<string> excludeGlobs { get; private set; } = new List<string>();
 
 	private readonly string root;
 
-	public SourceSet() : this(Manila.getInstance().root) { }
+	public SourceSet() : this(Shiron.Manila.Manila.getInstance().root) { }
 	public SourceSet(string root) {
 		this.root = root;
 	}
