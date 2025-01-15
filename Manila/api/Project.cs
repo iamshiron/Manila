@@ -29,6 +29,7 @@ public class Project : DynamicObject, IScriptableObject {
 	public ToolChain toolchain { get; private set; } = ToolChain.Clang;
 
 	public List<IDependency> _dependencies { get; private set; } = new();
+	public Dictionary<string, SourceSet> _sourceSets { get; private set; } = new();
 
 	/// <summary>
 	/// Creates a new project
@@ -94,22 +95,9 @@ public class Project : DynamicObject, IScriptableObject {
 
 	[ScriptFunction]
 	public void sourceSets(object obj) {
-		Logger.debug(getIdentifier());
-
-		Logger.info("sourceSets");
-
-		Dictionary<string, SourceSet> sets = new();
 		foreach (var pair in (IDictionary<string, object>) obj) {
-			sets.Add(pair.Key, (SourceSet) pair.Value);
-		}
-
-		foreach (var pair in sets) {
-			Logger.info($"SourceSet: {pair.Key}");
-			Logger.info(pair.Value.fileGlobs);
-
-			foreach (var file in pair.Value.files()) {
-				Logger.info($"File: {file.path}");
-			}
+			if (_sourceSets.ContainsKey(pair.Key)) throw new Exception($"SourceSet '{pair.Key}' already exists.");
+			_sourceSets.Add(pair.Key, (SourceSet) pair.Value);
 		}
 	}
 
