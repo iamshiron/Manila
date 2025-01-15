@@ -15,11 +15,15 @@ public class Clang : IToolChain {
 		Logger.debug("ObjDir: " + project.objDir);
 		Logger.debug("RunDir: " + project.runDir);
 
-		var root = Shiron.Manila.Manila.getInstance().root;
+		var root = project._sourceSets["main"].root;
 		var set = project._sourceSets["main"];
 		var objFiles = new List<string>();
 
+		Logger.debug("Root: " + root);
+
 		foreach (var file in set.files()) {
+			Logger.debug("File: " + file);
+
 			var realtiveToSrc = Path.GetRelativePath(root, file);
 			var objFile = project.objDir + "/" + realtiveToSrc + ".o";
 			var objFileDir = Path.GetDirectoryName(objFile);

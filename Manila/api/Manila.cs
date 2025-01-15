@@ -67,23 +67,17 @@ public class Manila {
 	/// <summary>
 	/// Create a new source set at the root directory
 	/// </summary>
-	/// <param name="d">The directories to automatically include</param>
+	/// <param name="d">The root directory of the source set</param>
 	/// <returns>A newly created source set</returns>
-	public SourceSet sourceSet(params object[] d) {
-		SourceSet set = new();
-		foreach (object o in d) {
-			if (o is string) set.include((string) o);
-			else if (o is Dir) set.include((Dir) o);
-			else throw new Exception("Invalid type");
-		}
-		return set;
+	public SourceSet sourceSet(string root) {
+		return new(root);
 	}
 
 	public DependencyStaticCompile compile(UnresolvedProject project) {
-		return new DependencyStaticCompile(project);
+		return new(project);
 	}
 	public DependencyStaticLink link(string libFile) {
-		return new DependencyStaticLink(libFile);
+		return new(libFile);
 	}
 
 	public void build(Workspace workspace, Project project, BuildConfig config) {

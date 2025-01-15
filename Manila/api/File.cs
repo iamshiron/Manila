@@ -2,6 +2,9 @@
 public class File {
 	public string path { get; private set; }
 
+	public File(string dir, string name) {
+		this.path = Path.Combine(dir, name);
+	}
 	public File(string path) {
 		this.path = path;
 	}

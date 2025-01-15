@@ -8,5 +8,6 @@ namespace manila {
 
 int main() {
 	manila::Server::init();
+
 	return 0;
 }

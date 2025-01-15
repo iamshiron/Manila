@@ -10,7 +10,7 @@ public class SourceSet {
 	public List<string> fileGlobs { get; private set; } = new List<string>();
 	public List<string> excludeGlobs { get; private set; } = new List<string>();
 
-	private readonly string root;
+	public readonly string root;
 
 	public SourceSet() : this(Shiron.Manila.Manila.getInstance().root) { }
 	public SourceSet(string root) {
@@ -19,12 +19,12 @@ public class SourceSet {
 
 	public SourceSet include(string d) {
 		Logger.debug("Including " + d);
-		fileGlobs.Add(toRelativePath(d));
+		fileGlobs.Add(d);
 		return this;
 	}
 	public SourceSet exclude(string d) {
 		Logger.debug("Excluding " + d);
-		excludeGlobs.Add(toRelativePath(d));
+		excludeGlobs.Add(d);
 		return this;
 	}
 
@@ -39,7 +39,7 @@ public class SourceSet {
 		PatternMatchingResult result = matcher.Execute(root);
 
 
-		return result.Files.Select(f => new File(f.Path)).ToArray();
+		return result.Files.Select(f => new File(this.root, f.Path)).ToArray();
 	}
 
 	private string toRelativePath(string path) {
