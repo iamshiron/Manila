@@ -39,6 +39,22 @@ public class GradleStyleLogger {
 		}
 	}
 
+	public void error(string message) {
+		lock (_consoleLock) {
+			if (!string.IsNullOrEmpty(_currentTask)) {
+				Console.SetCursorPosition(0, _statusLine);
+				clearLine();
+			}
+
+			AnsiConsole.MarkupLine($"[red]{message}[/]");
+			_statusLine = Console.CursorTop;
+
+			if (!string.IsNullOrEmpty(_currentTask)) {
+				writeStatus();
+			}
+		}
+	}
+
 	public void subLog(string message) {
 		lock (_consoleLock) {
 			if (!string.IsNullOrEmpty(_currentTask)) {

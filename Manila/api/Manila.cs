@@ -61,7 +61,19 @@ public class Manila {
 	/// </summary>
 	/// <param name="name">The plugin name</param>
 	public void apply(string name) {
-		Logger.debug("Applying: " + name);
+		Logger.debug("Applying plugin: " + name);
+		string[] sub = name.Split(":");
+		foreach (var plugin in ExtensionAPI.getInstance().plugins) {
+			if (plugin.group.Equals(sub[0]) && plugin.name.Equals(sub[1])) {
+				foreach (var component in plugin.components) {
+					var ext = (ProjectExtension) Activator.CreateInstance(component);
+					if (!ext.getID().Equals(sub[2])) continue;
+					Logger.debug("Applying plugin component: " + ext.getQualifier());
+					this.context.project.apply(ext);
+					this.context.project.flush();
+				}
+			}
+		}
 	}
 
 	/// <summary>

@@ -21,6 +21,11 @@ public class ExtensionAPI {
 	}
 
 	private void loadPlugins() {
+		Logger.debug("Loading plugins...");
+
+		// Initialize standard plugin
+		loadPlugin(new ManilaStandardPlugin(), typeof(ManilaStandardPlugin));
+
 		foreach (var file in Directory.GetFiles(pluginRoot)) {
 			if (!file.EndsWith(".dll")) continue;
 			try {
@@ -31,16 +36,7 @@ public class ExtensionAPI {
 				foreach (var pluginType in pluginTypes) {
 					try {
 						var plugin = (ManilaPlugin) Activator.CreateInstance(pluginType);
-						plugin.init();
-						plugins.Add(plugin);
-
-						foreach (var field in pluginType.GetProperties(BindingFlags.Public | BindingFlags.Static | BindingFlags.GetProperty | BindingFlags.SetProperty)) {
-							Logger.debug($"Checking field {field.Name} in {pluginType.FullName}");
-							if (field.GetCustomAttribute<PluginInstance>() != null) {
-								field.SetValue(plugin, plugin);
-							}
-						}
-
+						loadPlugin(plugin, pluginType);
 					} catch (Exception ex) {
 						Console.WriteLine($"Failed to initialize plugin from {pluginType.FullName}: {ex.Message}");
 						Console.WriteLine(ex.StackTrace);
@@ -48,6 +44,23 @@ public class ExtensionAPI {
 				}
 			} catch (Exception ex) {
 				Console.WriteLine($"Failed to load assembly {file}: {ex.Message}");
+			}
+		}
+
+		Logger.info($"Loaded {plugins.Count} plugins.");
+		foreach (var p in plugins) {
+			Logger.info($"Loaded plugin {p.getQualifier()}");
+		}
+	}
+
+	public void loadPlugin(ManilaPlugin plugin, Type pluginType) {
+		plugin.init();
+		plugins.Add(plugin);
+
+		foreach (var field in pluginType.GetProperties(BindingFlags.Public | BindingFlags.Static | BindingFlags.GetProperty | BindingFlags.SetProperty)) {
+			Logger.debug($"Checking field {field.Name} in {pluginType.FullName}");
+			if (field.GetCustomAttribute<PluginInstance>() != null) {
+				field.SetValue(plugin, plugin);
 			}
 		}
 	}

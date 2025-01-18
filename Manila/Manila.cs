@@ -60,6 +60,7 @@ public class Manila {
 		}
 
 		ScriptContext context = new ScriptContext(currentProject, this, path, scriptLogger);
+		currentProject.applyScriptContext(context);
 		context.init();
 		context.execute();
 		currentProject = null;

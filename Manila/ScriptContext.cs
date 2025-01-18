@@ -16,7 +16,6 @@ public class ScriptContext {
 
 	private readonly Action<object[]> scriptLogger;
 
-
 	public ScriptContext(API.Project project, Manila manila, string scriptPath, Action<object[]> scriptLogger) {
 		instance = manila;
 		path = scriptPath;
@@ -24,7 +23,6 @@ public class ScriptContext {
 		this.project = project;
 		this.scriptLogger = scriptLogger;
 	}
-
 
 	public void init() {
 		Logger.debug("Initializing script context...");

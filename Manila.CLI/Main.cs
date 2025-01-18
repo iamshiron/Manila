@@ -54,6 +54,7 @@ Logger.debug("Executing task: " + task);
 
 try {
 	Manila instance = Manila.getInstance();
+
 	instance.init((object[] message) => {
 		logger.subLog(string.Join(" ", message));
 	});
@@ -66,6 +67,9 @@ try {
 	}
 
 	logger.stop();
+} catch (Microsoft.ClearScript.ScriptEngineException e) {
+	logger.stop(false, e);
+	Console.WriteLine(e);
 } catch (Exception e) {
 	logger.stop(false, e);
 }

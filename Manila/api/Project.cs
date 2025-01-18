@@ -1,4 +1,5 @@
 using System.Dynamic;
+using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.Remoting;
 using System.Text;
@@ -38,6 +39,10 @@ public class Project : DynamicObject, IScriptableObject {
 	public List<IDependency> _dependencies { get; private set; } = new();
 	public Dictionary<string, SourceSet> _sourceSets { get; private set; } = new();
 
+	public ScriptContext context { get; private set; }
+
+	private List<string> flushedTypes = new();
+
 	/// <summary>
 	/// Creates a new project
 	/// </summary>
@@ -49,6 +54,11 @@ public class Project : DynamicObject, IScriptableObject {
 		if (!path.isAbsolute()) throw new Exception($"Directory '{location}' is not an absolute path.");
 
 		this.name = name;
+	}
+
+	public void applyScriptContext(ScriptContext context) {
+		if (this.context != null) throw new Exception("ScriptContext already applied.");
+		this.context = context;
 	}
 
 	public Dir getPath() {
@@ -124,5 +134,34 @@ public class Project : DynamicObject, IScriptableObject {
 
 	public string getName() {
 		return name;
+	}
+
+	// Internal API Functions\
+	public void apply(ProjectExtension e) {
+		var type = e.GetType();
+
+		foreach (MethodInfo func in type.GetMethods()) {
+			var attr = func.GetCustomAttributes<ScriptFunction>();
+			if (attr != null) {
+				Logger.debug($"Adding function '{func.Name}'");
+				addFunction(func.Name, FuncUtils.toDelegate(func, e));
+			}
+		}
+	}
+
+	private void addFunction(string name, Delegate impl) {
+		if (this.context == null) throw new Exception("ScriptContext not applied.");
+		if (dynamicMethods.ContainsKey(name)) { Logger.warn($"Method '{name}' already exists, overwriting."); return; } // Temporary to check if I can just ignore that a duplicate method has been added
+
+		Logger.debug($"Adding function '{name}'");
+		dynamicMethods.Add(name, impl);
+	}
+
+	public void flush() {
+		foreach (var func in dynamicMethods) {
+			if (flushedTypes.Contains(func.Key)) continue;
+			context.engine.ExecuteCommand($"function {func.Key}() {{ return project.{func.Key}(); }}");
+			flushedTypes.Add(func.Key);
+		}
 	}
 }
