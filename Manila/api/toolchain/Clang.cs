@@ -41,16 +41,6 @@ public class Clang : IToolChain {
 	}
 
 	public void run(params string[] args) {
-		runCommand(commandPrefix, args);
-	}
-	public void runCommand(string command, params string[] args) {
-		Logger.debug("Running command: " + command + " " + string.Join(" ", args));
-
-		var process = new System.Diagnostics.Process();
-		process.StartInfo.FileName = command;
-		process.StartInfo.Arguments = string.Join(" ", args);
-		process.StartInfo.UseShellExecute = false;
-		process.Start();
-		process.WaitForExit();
+		ProcessUtils.runCommand(commandPrefix, args, null, Console.WriteLine);
 	}
 }
