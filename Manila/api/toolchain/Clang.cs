@@ -4,40 +4,30 @@ using Shiron.Manila.Utils;
 
 namespace Shiron.Manila.API.Toolchain;
 
-public class Clang : IToolChain {
+public class Clang : ToolChain {
 	private static readonly string commandPrefix = "clang++";
 
-	public Clang() { }
+	public Clang(Project project) : base(project) { }
 
-	public void compile(Project project) {
-		Logger.debug("Compiling project with Clang");
-		Logger.debug("BinDir: " + project.binDir);
-		Logger.debug("ObjDir: " + project.objDir);
-		Logger.debug("RunDir: " + project.runDir);
+	public override void preBuild() {
+		Logger.debug("Clang preBuild");
+	}
+	public override void postBuild() {
+		Logger.debug("Clang postBuild");
+	}
 
-		var root = project._sourceSets["main"].root;
-		var set = project._sourceSets["main"];
-		var objFiles = new List<string>();
+	public override string compileFile(string file) {
+		var realtiveToSrc = Path.GetRelativePath(root, file);
+		var objFile = project.objDir + "/" + realtiveToSrc + ".o";
+		run("-c", file, "-o", objFile);
 
-		Logger.debug("Root: " + root);
+		return objFile;
+	}
 
-		foreach (var file in set.files()) {
-			Logger.debug("File: " + file);
-
-			var realtiveToSrc = Path.GetRelativePath(root, file);
-			var objFile = project.objDir + "/" + realtiveToSrc + ".o";
-			var objFileDir = Path.GetDirectoryName(objFile);
-			objFiles.Add(objFile);
-
-			if (!Directory.Exists(objFileDir)) Directory.CreateDirectory(objFileDir);
-
-			run("-c", file, "-o", objFile);
-		}
-
-		Logger.debug("Object Files: " + string.Join(" ", objFiles));
-
-		if (!Directory.Exists(project.binDir)) Directory.CreateDirectory(project.binDir);
-		run("-o", project.binDir + "/" + project.name + ".exe", string.Join(" ", objFiles));
+	public override string linkFiles(string[] files) {
+		var outPath = project.binDir + "/" + project.name + ".exe";
+		run("-o", outPath, string.Join(" ", objFiles));
+		return outPath;
 	}
 
 	public void run(params string[] args) {

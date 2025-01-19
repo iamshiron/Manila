@@ -82,7 +82,7 @@ public class Manila {
 
 	public void build(Workspace workspace, Project project, BuildConfig config) {
 		if (project.toolchain.Equals(EToolChain.clang)) {
-			new Clang().compile(project);
+			new Clang(project).compile();
 		} else {
 			throw new Exception("Unsupported toolchain: " + project.toolchain);
 		}
