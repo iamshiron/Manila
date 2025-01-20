@@ -5,7 +5,6 @@ using Shiron.Manila.Utils;
 namespace Shiron.Manila.API.Toolchain;
 
 public abstract class ToolChain {
-	public List<string> objFiles { get; private set; } = new();
 	protected Project project { get; private set; }
 	protected readonly string root = Shiron.Manila.Manila.getInstance().root;
 
@@ -36,6 +35,7 @@ public abstract class ToolChain {
 		Logger.debug("Object Files: " + string.Join(" ", objFiles));
 
 		if (!Directory.Exists(project.binDir)) Directory.CreateDirectory(project.binDir);
+		var outPath = linkFiles(objFiles.ToArray());
 	}
 
 	public abstract void preBuild();

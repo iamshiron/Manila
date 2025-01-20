@@ -26,16 +26,25 @@ public class Task {
 	}
 
 	public Task execute(dynamic action) {
-		this.action = () => action();
+		this.action = () => {
+			try {
+				action();
+			} catch (Exception e) {
+				Logger.error("Task failed: " + name);
+				Logger.error(e.GetType().Name + ": " + e.Message);
+				throw;
+			}
+		};
 		return this;
 	}
 
 	public void run(bool runDependencies = true) {
-		if (runDependencies)
-			foreach (var dep in dependencies) {
-				context.instance.workspace.runTask(dep);
-			}
+		if (runDependencies) foreach (var dep in dependencies) context.instance.workspace.runTask(dep);
 
-		action?.Invoke();
+		try {
+			action?.Invoke();
+		} catch (CompileException) {
+			throw;
+		}
 	}
 }

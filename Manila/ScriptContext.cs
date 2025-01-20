@@ -96,7 +96,12 @@ public class ScriptContext {
 	}
 
 	public void execute() {
-		engine.Execute(System.IO.File.ReadAllText(path));
+		try {
+			engine.Execute(System.IO.File.ReadAllText(path));
+		} catch {
+			Logger.error("Script failed: " + path);
+			throw;
+		}
 	}
 
 	public void scriptLog(params object[] args) {

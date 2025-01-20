@@ -26,11 +26,11 @@ public class Clang : ToolChain {
 
 	public override string linkFiles(string[] files) {
 		var outPath = project.binDir + "/" + project.name + ".exe";
-		run("-o", outPath, string.Join(" ", objFiles));
+		run("-o", outPath, string.Join(" ", files));
 		return outPath;
 	}
 
 	public void run(params string[] args) {
-		ProcessUtils.runCommand(commandPrefix, args, null, Console.WriteLine);
+		ProcessUtils.runCommand(commandPrefix, args, null, null);
 	}
 }

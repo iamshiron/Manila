@@ -1,5 +1,6 @@
 
 using System.Diagnostics;
+using System.Text;
 
 namespace Shiron.Manila.Utils;
 
@@ -11,26 +12,42 @@ public static class ProcessUtils {
 			FileName = command,
 			Arguments = string.Join(" ", args),
 			UseShellExecute = false,
-			RedirectStandardOutput = stdOut != null,
-			RedirectStandardError = stdErr != null,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+			CreateNoWindow = true,
+			WindowStyle = ProcessWindowStyle.Hidden,
+			StandardOutputEncoding = Encoding.UTF8,
+			StandardErrorEncoding = Encoding.UTF8
+		};
+		startInfo.Environment["TERM"] = "xterm-256color";
+		startInfo.Environment["FORCE_COLOR"] = "true";
+
+		using var process = new Process { StartInfo = startInfo };
+		StringBuilder stdOutBuilder = new();
+		StringBuilder stdErrBuilder = new();
+
+		process.OutputDataReceived += (sender, e) => {
+			if (e.Data == null) return;
+			stdOutBuilder.AppendLine(e.Data);
+			if (stdOut != null) stdOut(e.Data);
 		};
 
-		using (Process process = Process.Start(startInfo)) {
-			if (stdOut != null) {
-				process.OutputDataReceived += (sender, e) => {
-					if (e.Data != null) stdOut(e.Data);
-				};
-				process.BeginOutputReadLine();
-			}
+		process.ErrorDataReceived += (sender, e) => {
+			if (e.Data == null) return;
+			stdErrBuilder.AppendLine(e.Data);
+			if (stdErr != null) stdErr(e.Data);
+		};
 
-			if (stdOut != null) {
-				process.ErrorDataReceived += (sender, e) => {
-					if (e.Data != null) stdErr(e.Data);
-				};
-				process.BeginErrorReadLine();
-			}
+		process.Exited += (sender, e) => {
+			if (process.ExitCode == 0) return;
+			throw new CompileException("Compilation Failed!", command + " " + string.Join(" ", args), stdErrBuilder.ToString(), stdErrBuilder.ToString());
+		};
 
-			process.WaitForExit();
-		}
+		process.Start();
+		process.BeginOutputReadLine();
+		process.BeginErrorReadLine();
+		process.WaitForExit();
+
+		Logger.debug("Command exited with code: " + process.ExitCode);
 	}
 }

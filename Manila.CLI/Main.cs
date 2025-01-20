@@ -7,12 +7,15 @@ using Shiron.Manila.CLI.Commands;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using WenceyWang.FIGlet;
+using Shiron.Manila.CLI.Logger;
+using Microsoft.ClearScript;
 
 #if DEBUG
 if (!Directory.Exists("./run/")) Directory.CreateDirectory("./run/");
 Directory.SetCurrentDirectory("./run/");
 #endif
 bool verbose = args.Contains("-v") || args.Contains("--verbose");
+bool stackTrace = args.Contains("--stack-trace");
 bool quiet = args.Contains("-q") || args.Contains("--quiet");
 
 if (!quiet) {
@@ -21,7 +24,7 @@ if (!quiet) {
 	AnsiConsole.MarkupLine($"[blue]{string.Join("\n", lines)}[/]");
 }
 
-var logger = new GradleStyleLogger();
+var logger = new GradleStyleLogger(verbose, stackTrace);
 AnsiConsole.MarkupLine("[skyblue1]Build Started At " + DateTime.Now + "[/]\n");
 logger.start();
 logger.log("Configuring");

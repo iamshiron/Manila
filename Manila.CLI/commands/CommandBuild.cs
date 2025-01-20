@@ -12,7 +12,7 @@ public class CommandBuild : Command<CommandBuild.Settings> {
 	public override int Execute(CommandContext context, Settings settings) {
 		Manila instance = Manila.getInstance();
 
-		Logger.info("Building project...");
+		Utils.Logger.info("Building project...");
 
 		return 0;
 	}

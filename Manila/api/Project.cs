@@ -73,7 +73,6 @@ public class Project : DynamicObject, IScriptableObject {
 	}
 
 	public override IEnumerable<string> GetDynamicMemberNames() {
-		Logger.debug("GetDynamicMemberNames");
 		return dynamicMethods.Keys;
 	}
 	public override bool TryInvokeMember(InvokeMemberBinder binder, object?[] args, out object result) {

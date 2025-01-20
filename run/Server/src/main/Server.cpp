@@ -9,5 +9,7 @@ namespace manila {
 int main() {
 	manila::Server::init();
 
-	return 0;
+	int i = std::cin.get()
+
+	            return 0;
 }
