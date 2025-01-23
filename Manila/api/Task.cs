@@ -1,3 +1,4 @@
+using Shiron.Manila.Exceptions;
 using Shiron.Manila.Utils;
 
 namespace Shiron.Manila.API;
@@ -8,6 +9,8 @@ public class Task {
 	private Action? action;
 	private readonly ScriptContext context;
 	private readonly Project project;
+
+	public static Task? currentTask { get; private set; } = null;
 
 	public Task(ScriptContext context, Project project, string name) {
 		this.name = name;
@@ -39,6 +42,7 @@ public class Task {
 	}
 
 	public void run(bool runDependencies = true) {
+		currentTask = this;
 		if (runDependencies) foreach (var dep in dependencies) context.instance.workspace.runTask(dep);
 
 		try {
@@ -46,5 +50,10 @@ public class Task {
 		} catch (CompileException) {
 			throw;
 		}
+		currentTask = null;
+	}
+
+	public string getQualifiedName() {
+		return Path.GetDirectoryName(Path.GetRelativePath(context.instance.root, context.path)).ToLower().Replace("/", ":").Replace("\\", ":") + ":" + name;
 	}
 }

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 using Microsoft.ClearScript;
 using Shiron.Manila.API.Toolchain;
 using Shiron.Manila.Ext;
@@ -111,6 +112,8 @@ public class Manila {
 			process.BeginOutputReadLine();
 			process.BeginErrorReadLine();
 			process.WaitForExit();
+
+			if (process.ExitCode != 0) throw new CommandExecutionException(startInfo.FileName, null, null, process.ExitCode);
 		}
 	}
 }

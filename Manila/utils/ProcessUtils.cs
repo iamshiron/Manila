@@ -1,6 +1,7 @@
 
 using System.Diagnostics;
 using System.Text;
+using Shiron.Manila.Exceptions;
 
 namespace Shiron.Manila.Utils;
 

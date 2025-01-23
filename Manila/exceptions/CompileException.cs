@@ -1,6 +1,9 @@
 using System.Text;
+using Spectre.Console;
 
-public class CompileException : Exception {
+namespace Shiron.Manila.Exceptions;
+
+public class CompileException : BuildException {
 	public string command { get; private set; }
 	public string stdOut { get; private set; }
 	public string stdErr { get; private set; }
@@ -17,11 +20,13 @@ public class CompileException : Exception {
 		this.stdErr = stdErr;
 	}
 
-	private static string format(string m) {
+	public override string format() {
 		var builder = new StringBuilder();
-		foreach (var l in m.Split('\n')) {
-			builder.Append("\u001B[0m" + l + "\n");
-		}
+		builder.AppendLine(formatHeader());
+		builder.AppendLine($"Command: {Markup.Escape(command)}");
+		builder.AppendLine("Compiler Output:");
+		builder.AppendLine(Markup.Escape(stdOut));
+
 		return builder.ToString();
 	}
 }

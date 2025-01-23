@@ -9,6 +9,8 @@ using Spectre.Console.Cli;
 using WenceyWang.FIGlet;
 using Shiron.Manila.CLI.Logger;
 using Microsoft.ClearScript;
+using System.Diagnostics;
+using Shiron.Manila.Exceptions;
 
 #if DEBUG
 if (!Directory.Exists("./run/")) Directory.CreateDirectory("./run/");
@@ -24,7 +26,7 @@ if (!quiet) {
 	AnsiConsole.MarkupLine($"[blue]{string.Join("\n", lines)}[/]");
 }
 
-var logger = new GradleStyleLogger(verbose, stackTrace);
+var logger = new ActivityLog(verbose, stackTrace);
 AnsiConsole.MarkupLine("[skyblue1]Build Started At " + DateTime.Now + "[/]\n");
 logger.start();
 logger.log("Configuring");
@@ -49,12 +51,13 @@ if (args.Length < 1 || !args[0].StartsWith(':')) {
 
 	app.Run(args);
 
-	return;
+	return 0;
 }
 
 var task = args[0][1..];
 Logger.debug("Executing task: " + task);
 
+var error = true;
 try {
 	Manila instance = Manila.getInstance();
 	instance.init((object[] message) => {
@@ -63,14 +66,22 @@ try {
 
 	List<Shiron.Manila.API.Task> tasks = instance.workspace.getSchedule(task);
 
+
 	foreach (var t in tasks) {
 		logger.log(t.name);
 		t.run(false);
 	}
 
-	logger.stop();
+	logger.success();
+	error = false;
+} catch (BuildException e) {
+	logger.error(e);
 } catch (Exception e) {
-	logger.stop(false, e);
+	Exception inner = e;
+	while (inner.InnerException != null) inner = inner.InnerException;
+	logger.error(inner);
 }
 
 AnsiConsole.MarkupLine("\n[skyblue1]Build Finished At " + DateTime.Now + "[/]");
+
+return error ? 1 : 0;
