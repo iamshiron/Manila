@@ -17,8 +17,13 @@ public class Clang : ToolChain {
 		Logger.debug("Clang postBuild");
 	}
 
-	public override void compileFile(string fileIn, string fileOut) {
-		run(commandPrefix, "-c", fileIn, "-o", fileOut);
+	public override void compileFile(string fileIn, string fileOut, CompilerOptions o) {
+		var args = new List<string>();
+		foreach (var d in o.includePaths) {
+			args.Add("-I" + d);
+		}
+
+		run(commandPrefix, "-c", fileIn, "-o", fileOut, string.Join(" ", args));
 	}
 
 	public override string linkConsole(LinkerOptions o) {
@@ -34,9 +39,7 @@ public class Clang : ToolChain {
 		foreach (var d in o.libPaths) {
 			args.Add("-L" + d);
 		}
-		foreach (var d in o.includePaths) {
-			args.Add("-I" + d);
-		}
+
 
 		run(commandPrefix, "-o", outPath, string.Join(" ", args));
 		return outPath;

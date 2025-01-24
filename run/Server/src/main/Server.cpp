@@ -1,8 +1,8 @@
 #include "Server.hpp"
 
-#include "../../../Core/src/main/Core.hpp"
-
+#include <Core.hpp>
 #include <iostream>
+
 
 namespace manila {
 	void Server::init() { std::cout << "Server::init()" << std::endl; }

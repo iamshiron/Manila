@@ -6,14 +6,6 @@ using Shiron.Manila.Utils;
 namespace Shiron.Manila.API.Toolchain;
 
 public abstract class ToolChain {
-	public class LinkerOptions {
-		public string[] files;
-		public string outPath;
-		public string[] libs;
-		public string[] libPaths;
-		public string[] includePaths;
-	}
-
 	protected Project project { get; private set; }
 	protected readonly string root = Shiron.Manila.Manila.getInstance().root;
 
@@ -30,6 +22,15 @@ public abstract class ToolChain {
 		var set = project._sourceSets["main"];
 		var objFiles = new List<string>();
 
+		var lo = new LinkerOptions() { files = objFiles };
+		var co = new CompilerOptions() { includePaths = new List<string>() { root } };
+
+		foreach (var d in project._dependencies) {
+			d.resolve(co, lo);
+		}
+		Console.WriteLine("Compiler Options: ", co);
+		Console.WriteLine("Linker Options: ", lo);
+
 		Logger.debug("Root: " + root);
 
 		foreach (var file in set.files()) {
@@ -39,7 +40,7 @@ public abstract class ToolChain {
 
 			if (!Directory.Exists(objFileDir)) Directory.CreateDirectory(objFileDir);
 
-			compileFile(file, objFile);
+			compileFile(file, objFile, co);
 			objFiles.Add(objFile);
 
 		}
@@ -47,22 +48,11 @@ public abstract class ToolChain {
 		Logger.debug("Object Files: " + string.Join(" ", objFiles));
 
 		if (!Directory.Exists(project.binDir)) Directory.CreateDirectory(project.binDir);
-
-		var libFiles = new List<string>();
-		foreach (var d in project._dependencies) {
-			libFiles.Add(d.resolve());
-		}
-
 		string outPath;
 		if (project.appliedComponents.Contains("manila.console")) {
-			outPath = linkConsole(new LinkerOptions {
-				files = objFiles.ToArray(),
-				libs = libFiles.ToArray(),
-			});
+			outPath = linkConsole(lo);
 		} else if (project.appliedComponents.Contains("manila.staticlib")) {
-			outPath = linkStaticLib(new LinkerOptions {
-				files = objFiles.ToArray()
-			});
+			outPath = linkStaticLib(lo);
 		} else {
 			throw new BuildException("No target specified");
 		}
@@ -70,7 +60,7 @@ public abstract class ToolChain {
 
 	public abstract void preBuild();
 	public abstract void postBuild();
-	public abstract void compileFile(string fileIn, string fileOut);
+	public abstract void compileFile(string fileIn, string fileOut, CompilerOptions o);
 	public abstract string linkConsole(LinkerOptions o);
 	public abstract string linkStaticLib(LinkerOptions o);
 }
