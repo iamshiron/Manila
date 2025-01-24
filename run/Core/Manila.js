@@ -15,18 +15,16 @@ objDir(workspace.getPath().join('bin-int', config.getPlatform(), `${config.getCo
 runDir(workspace.getPath().join('bin', config.getPlatform(), `${config.getConfig()}-${config.getArchitecture()}`, project.getName()))
 
 sourceSets({
-	main: Manila.sourceSet(project.getPath().join('src/main/**/*.cpp')),
-	test: Manila.sourceSet(project.getPath().join('src/test/**/*.cpp'))
+	main: Manila.sourceSet(project.getPath().join('src/main')).include('**/*.cpp'),
+	test: Manila.sourceSet(project.getPath().join('src/test')).include('**/*.cpp')
 })
 
-dependencies([])
-
 Manila.task('build').execute(() => {
-	print('Building core...')
+	Manila.build(workspace, project, config)
 })
 
 Manila.task('test')
-	.after('build')
+	.after(':build')
 	.execute(() => {
-		Manila.test(workspace, project, config)
+		print('Runnin tests...')
 	})

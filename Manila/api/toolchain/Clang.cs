@@ -1,4 +1,5 @@
 
+using System.Text;
 using Shiron.Manila.API;
 using Shiron.Manila.Utils;
 
@@ -16,21 +17,37 @@ public class Clang : ToolChain {
 		Logger.debug("Clang postBuild");
 	}
 
-	public override string compileFile(string file) {
-		var realtiveToSrc = Path.GetRelativePath(root, file);
-		var objFile = project.objDir + "/" + realtiveToSrc + ".o";
-		run("-c", file, "-o", objFile);
-
-		return objFile;
+	public override void compileFile(string fileIn, string fileOut) {
+		run(commandPrefix, "-c", fileIn, "-o", fileOut);
 	}
 
-	public override string linkFiles(string[] files) {
+	public override string linkConsole(LinkerOptions o) {
 		var outPath = project.binDir + "/" + project.name + ".exe";
-		run("-o", outPath, string.Join(" ", files));
+
+		var args = new List<string>();
+		foreach (var f in o.files) {
+			args.Add(f);
+		}
+		foreach (var l in o.libs) {
+			args.Add("-l" + l);
+		}
+		foreach (var d in o.libPaths) {
+			args.Add("-L" + d);
+		}
+		foreach (var d in o.includePaths) {
+			args.Add("-I" + d);
+		}
+
+		run(commandPrefix, "-o", outPath, string.Join(" ", args));
+		return outPath;
+	}
+	public override string linkStaticLib(LinkerOptions o) {
+		var outPath = project.binDir + "/" + project.name + ".lib";
+		run("llvm-ar", "rcs", outPath, string.Join(" ", o.files));
 		return outPath;
 	}
 
-	public void run(params string[] args) {
-		ProcessUtils.runCommand(commandPrefix, args, null, null);
+	public static void run(string command, params string[] args) {
+		ProcessUtils.runCommand(command, args, null, null);
 	}
 }

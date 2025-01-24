@@ -3,7 +3,7 @@ using Shiron.Manila.Utils;
 namespace Shiron.Manila.API;
 
 public interface IDependency {
-	public abstract void resolve();
+	public abstract string resolve();
 }
 
 public class DependencyStaticCompile : IDependency {
@@ -13,9 +13,10 @@ public class DependencyStaticCompile : IDependency {
 		this.project = project;
 	}
 
-	public void resolve() {
+	public string resolve() {
 		var project = this.project.resolve();
 		Logger.debug("Resolving static compile dependency '" + project.name + "'");
+		return project.binDir + "/" + project.name + ".lib";
 	}
 }
 
@@ -26,7 +27,7 @@ public class DependencyStaticLink : IDependency {
 		this.libFile = libFile;
 	}
 
-	public void resolve() {
-		Logger.debug("Resolving static link dependency '" + libFile + "'");
+	public string resolve() {
+		return libFile;
 	}
 }

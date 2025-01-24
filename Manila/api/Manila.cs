@@ -62,7 +62,7 @@ public class Manila {
 	/// </summary>
 	/// <param name="name">The plugin name</param>
 	public void apply(string name) {
-		Logger.debug("Applying: " + name);
+		context.instance.currentProject.appliedComponents.Add(name);
 	}
 
 	/// <summary>
