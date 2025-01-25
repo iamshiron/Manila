@@ -42,6 +42,7 @@ public class Task {
 	}
 
 	public void run(bool runDependencies = true) {
+		Shiron.Manila.Manila.getInstance().activityLogger.task(this);
 		currentTask = this;
 		if (runDependencies) foreach (var dep in dependencies) context.instance.workspace.runTask(dep);
 
@@ -51,6 +52,7 @@ public class Task {
 			throw;
 		}
 		currentTask = null;
+		Shiron.Manila.Manila.getInstance().activityLogger.taskEnd(this);
 	}
 
 	public string getQualifiedName() {

@@ -14,6 +14,8 @@ public abstract class ToolChain {
 	}
 
 	public void compile() {
+		var al = Shiron.Manila.Manila.getInstance().activityLogger;
+
 		Logger.debug("BinDir: " + project.binDir);
 		Logger.debug("ObjDir: " + project.objDir);
 		Logger.debug("RunDir: " + project.runDir);
@@ -28,10 +30,9 @@ public abstract class ToolChain {
 		foreach (var d in project._dependencies) {
 			d.resolve(co, lo);
 		}
-		Console.WriteLine("Compiler Options: ", co);
-		Console.WriteLine("Linker Options: ", lo);
 
 		Logger.debug("Root: " + root);
+		al.compileProject(project);
 
 		foreach (var file in set.files()) {
 			var realtiveToSrc = Path.GetRelativePath(root, file);
@@ -40,9 +41,9 @@ public abstract class ToolChain {
 
 			if (!Directory.Exists(objFileDir)) Directory.CreateDirectory(objFileDir);
 
+			al.compileFile(file);
 			compileFile(file, objFile, co);
 			objFiles.Add(objFile);
-
 		}
 
 		Logger.debug("Object Files: " + string.Join(" ", objFiles));
@@ -56,6 +57,8 @@ public abstract class ToolChain {
 		} else {
 			throw new BuildException("No target specified");
 		}
+
+		al.compileProjectEnd(project);
 	}
 
 	public abstract void preBuild();

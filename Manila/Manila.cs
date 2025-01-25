@@ -5,6 +5,7 @@ namespace Shiron.Manila;
 
 public class Manila {
 	private static Manila? instance;
+	public AbstractActivityLogger activityLogger { get; private set; }
 
 	public static string VERSION = "1.0.0";
 	public string root { get; private set; }
@@ -19,7 +20,8 @@ public class Manila {
 		workspace = new API.Workspace(root);
 	}
 
-	public void init(Action<object[]>? scriptLogger = null) {
+	public void init(Action<object[]>? scriptLogger, AbstractActivityLogger activityLogger) {
+		this.activityLogger = activityLogger;
 		if (!System.IO.File.Exists("Manila.js")) {
 			throw new Exception("No root build script found");
 		}

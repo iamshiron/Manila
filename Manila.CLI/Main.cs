@@ -8,8 +8,6 @@ using Spectre.Console;
 using Spectre.Console.Cli;
 using WenceyWang.FIGlet;
 using Shiron.Manila.CLI.Logger;
-using Microsoft.ClearScript;
-using System.Diagnostics;
 using Shiron.Manila.Exceptions;
 
 #if DEBUG
@@ -29,7 +27,6 @@ if (!quiet) {
 var logger = new ActivityLog(verbose, stackTrace);
 AnsiConsole.MarkupLine("[skyblue1]Build Started At " + DateTime.Now + "[/]\n");
 logger.start();
-logger.log("Configuring");
 
 Logger.init(verbose, quiet);
 
@@ -62,15 +59,9 @@ try {
 	Manila instance = Manila.getInstance();
 	instance.init((object[] message) => {
 		logger.subLog(string.Join(" ", message));
-	});
+	}, logger);
 
-	List<Shiron.Manila.API.Task> tasks = instance.workspace.getSchedule(task);
-
-
-	foreach (var t in tasks) {
-		logger.log(t.name);
-		t.run(false);
-	}
+	instance.workspace.runTask(task);
 
 	logger.success();
 	error = false;

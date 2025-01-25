@@ -1,12 +1,13 @@
 using System.Text;
 using Microsoft.VisualBasic;
+using Shiron.Manila.API;
 using Shiron.Manila.Exceptions;
 using Shiron.Manila.Utils;
 using Spectre.Console;
 
 namespace Shiron.Manila.CLI.Logger;
 
-public class ActivityLog {
+public class ActivityLog : AbstractActivityLogger {
 	private bool verbose;
 	private bool stackTrace;
 
@@ -19,10 +20,6 @@ public class ActivityLog {
 
 	public void start() {
 		startTime = DateTime.Now;
-	}
-
-	public void log(string taskName) {
-		AnsiConsole.MarkupLine($"[gray]> {Markup.Escape(taskName)}[/]");
 	}
 
 	public void subLog(string message) {
@@ -59,5 +56,23 @@ public class ActivityLog {
 				builder.AppendLine($"[grey]{Markup.Escape(l)}[/]");
 
 		return builder.ToString();
+	}
+
+	public override void task(API.Task t) {
+		AnsiConsole.MarkupLine($"[grey]> {Markup.Escape(t.getQualifiedName())}[/]");
+	}
+
+	public override void taskEnd(API.Task t) { }
+
+	public override void compileProject(Project p) {
+		AnsiConsole.MarkupLine($"[skyblue1]> Compiling project {Markup.Escape(p.getIdentifier())}[/]");
+	}
+
+	public override void compileProjectEnd(Project p) {
+		AnsiConsole.MarkupLine($"[green]> Finished compiling project {Markup.Escape(p.getIdentifier())}[/]");
+	}
+
+	public override void compileFile(string file) {
+		AnsiConsole.MarkupLine(Path.GetFileName(file));
 	}
 }
