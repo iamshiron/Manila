@@ -23,6 +23,10 @@ public class Task {
 	}
 
 	public Task after(string taskName) {
+		if (context.instance.currentProject is Workspace) {
+			dependencies.Add(taskName[1..]);
+			return this;
+		}
 		if (taskName.StartsWith(':')) dependencies.Add(Path.GetDirectoryName(Path.GetRelativePath(context.instance.root, context.path)).ToLower() + taskName);
 		else dependencies.Add(taskName);
 		return this;

@@ -88,6 +88,11 @@ public class Manila {
 			throw new Exception("Unsupported toolchain: " + project.toolchain);
 		}
 	}
+
+	public void run(UnresolvedProject project) {
+		Project resolvedProject = project.resolve();
+		run(resolvedProject);
+	}
 	public void run(Project project) {
 		Logger.debug("Running project: " + project.name);
 		Logger.debug("BinDir: " + project.binDir);

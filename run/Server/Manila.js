@@ -28,7 +28,7 @@ Manila.task('build').execute(() => {
 Manila.task('test')
 	.after(':build')
 	.execute(() => {
-		print('Runnin tests...')
+		print('Running tests...')
 	})
 
 Manila.task('run')
