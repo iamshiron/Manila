@@ -1,7 +1,8 @@
 
-using Manila.Docker;
 using Shiron.Manila.API;
 using Shiron.Manila.Ext;
+
+namespace Shiron.Manila.Docker;
 
 public class Container : ProjectApplicable {
 	private ManilaDocker plugin = ManilaDocker.instance;

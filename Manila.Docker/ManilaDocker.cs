@@ -1,6 +1,6 @@
 ﻿using Shiron.Manila.Ext;
 
-namespace Manila.Docker;
+namespace Shiron.Manila.Docker;
 
 public class ManilaDocker : ManilaPlugin {
 	[PluginInstance]
@@ -11,6 +11,8 @@ public class ManilaDocker : ManilaPlugin {
 
 	public override void init() {
 		debug("ManilaDocker.init()");
+
+		register(typeof(Docker.Container));
 	}
 
 	public override void release() {

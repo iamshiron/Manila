@@ -40,4 +40,29 @@ public abstract class ProjectApplicable : PluginComponent {
 			}
 		}
 	}
+
+	internal void apply(Project project) {
+		var methods = GetType()
+			.GetMethods()
+			.Where(m => m.GetCustomAttributes(typeof(ScriptFunction), true).Length > 0)
+			.Concat(GetType()
+				.BaseType?
+				.GetMethods()
+				.Where(m => m.GetCustomAttributes(typeof(ScriptFunction), true).Length > 0)
+				?? Array.Empty<System.Reflection.MethodInfo>());
+
+		foreach (var m in methods) {
+			if (m.GetCustomAttributes(typeof(ScriptFunction), true).Length < 1) continue;
+
+			var func = FunctionUtils.createDelegate(m, this);
+			project.addMethod(m.Name, func);
+		}
+
+		foreach (var f in GetType().GetProperties()) {
+			if (f.GetCustomAttributes(typeof(ScriptAttribute), true).Length < 1) continue;
+
+			project.addMethod(f.Name, FunctionUtils.createSetter(f, this));
+			project.addMethod($"get{char.ToUpper(f.Name[0])}{f.Name.Substring(1)}", FunctionUtils.createGetter(f, this));
+		}
+	}
 }

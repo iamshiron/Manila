@@ -14,9 +14,9 @@ public static class PluginIdentifierParser {
 		var match = PATTERN.Match(s);
 		if (!match.Success) throw new Exception($"Invalid plugin identifier: {s}");
 		return (
-			match.Groups["group"].Value ?? "shiron.manila",
+			match.Groups["group"].Value == "" ? "shiron.manila" : match.Groups["group"].Value,
 			match.Groups["plugin"].Value,
-			match.Groups["version"].Value ?? "any",
+			match.Groups["version"].Value == "" ? "latest" : match.Groups["version"].Value,
 			match.Groups["component"].Value
 		);
 	}

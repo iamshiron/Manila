@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.ClearScript;
@@ -72,10 +73,11 @@ public class Manila {
 		foreach (var p in ExtensionAPI.getInstance().plugins) {
 			if (!p.group.Equals(group) || !p.name.Equals(plugin)) return;
 			foreach (var t in p.components) {
-				var comp = (PluginComponent) Activator.CreateInstance(t.GetType());
+				var comp = (PluginComponent) Activator.CreateInstance(t, getProject());
 				if (!comp.getID().Equals(component)) return;
 
-				Logger.debug("Applying plugin: " + name);
+				if (comp is not ProjectApplicable) return;
+				((ProjectApplicable) comp).apply(getProject());
 			}
 		}
 	}

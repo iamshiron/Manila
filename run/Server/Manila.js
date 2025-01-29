@@ -3,6 +3,7 @@ const workspace = Manila.getWorkspace()
 const config = Manila.getBuildConfig()
 
 Manila.from('manila:console')
+Manila.apply('docker:container')
 language(Language.cpp)
 cppStandard('C++23')
 toolchain(ToolChain.clang)
@@ -20,6 +21,8 @@ sourceSets({
 })
 
 dependencies([Manila.compile(Manila.getProject(':core'))])
+
+project.docker()
 
 Manila.task('build').execute(() => {
 	Manila.build(workspace, project, config)

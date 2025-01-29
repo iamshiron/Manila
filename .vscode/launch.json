@@ -1,0 +1,21 @@
+{
+	"configurations": [
+		{
+			"type": "coreclr",
+			"request": "launch",
+			"name": "Launch Manila.CLI",
+			"program": "${workspaceFolder}/Manila.CLI/bin/Debug/net9.0/Manila.CLI.dll",
+			"args": [":run", "--verbose"],
+			"preLaunchTask": "build",
+			"console": "internalConsole"
+		}
+	],
+	"inputs": [
+		{
+			"type": "pickString",
+			"id": "projectToLaunch",
+			"description": "Select the project to launch",
+			"options": ["Manila", "Manila.CLI", "Manila.Docker"]
+		}
+	]
+}
