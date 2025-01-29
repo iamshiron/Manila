@@ -4,4 +4,6 @@
 
 .vscode/
 
-run/plugins
+run/.manila
+run/bin
+run/bin-int
