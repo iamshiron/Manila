@@ -12,7 +12,7 @@ public class ExtensionAPI {
 
 	private ExtensionAPI() {
 		root = Directory.GetCurrentDirectory();
-		pluginRoot = Path.Join(root, "plugins");
+		pluginRoot = Path.Join(root, "/.manila/plugins");
 		plugins = new();
 	}
 
