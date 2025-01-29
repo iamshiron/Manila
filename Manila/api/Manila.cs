@@ -1,8 +1,11 @@
 using System.Diagnostics;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.ClearScript;
 using Shiron.Manila.API.Toolchain;
+using Shiron.Manila.Exceptions;
 using Shiron.Manila.Ext;
+using Shiron.Manila.Ext.Utils;
 using Shiron.Manila.Utils;
 
 namespace Shiron.Manila.API;
@@ -62,7 +65,27 @@ public class Manila {
 	/// </summary>
 	/// <param name="name">The plugin name</param>
 	public void apply(string name) {
-		context.instance.currentProject.appliedComponents.Add(name);
+		if (!PluginIdentifierParser.isValid(name)) throw new Exception("Invalid plugin identifier: " + name);
+		var (group, plugin, version, component) = PluginIdentifierParser.parse(name);
+
+		getProject().appliedComponents.Add($"{group}:{plugin}@{version}:{component}");
+		foreach (var p in ExtensionAPI.getInstance().plugins) {
+			if (!p.group.Equals(group) || !p.name.Equals(plugin)) return;
+			foreach (var t in p.components) {
+				var comp = (PluginComponent) Activator.CreateInstance(t.GetType());
+				if (!comp.getID().Equals(component)) return;
+
+				Logger.debug("Applying plugin: " + name);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Defines from what the project inherits from
+	/// </summary>
+	/// <param name="name">The id</param>
+	public void from(string name) {
+		getProject().inheritsFrom = name;
 	}
 
 	/// <summary>

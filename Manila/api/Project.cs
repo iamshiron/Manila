@@ -15,6 +15,7 @@ public class Project : DynamicObject, IScriptableObject {
 	public Dictionary<string, Task> tasks { get; } = new();
 	public List<string> appliedComponents { get; } = new();
 	public List<string> appliedPlugins { get; } = new();
+	public string inheritsFrom { get; internal set; }
 	public Dictionary<string, Delegate> dynamicMethods { get; } = new();
 
 	[ScriptAttribute]

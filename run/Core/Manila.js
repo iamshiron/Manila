@@ -2,7 +2,7 @@ const project = Manila.getProject()
 const workspace = Manila.getWorkspace()
 const config = Manila.getBuildConfig()
 
-Manila.apply('manila.staticlib')
+Manila.from('manila:staticlib')
 language(Language.cpp)
 cppStandard('C++23')
 toolchain(ToolChain.clang)

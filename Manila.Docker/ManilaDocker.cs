@@ -10,7 +10,6 @@ public class ManilaDocker : ManilaPlugin {
 	}
 
 	public override void init() {
-		instance.release();
 		debug("ManilaDocker.init()");
 	}
 

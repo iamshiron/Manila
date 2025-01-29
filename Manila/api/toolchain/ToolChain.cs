@@ -50,12 +50,12 @@ public abstract class ToolChain {
 
 		if (!Directory.Exists(project.binDir)) Directory.CreateDirectory(project.binDir);
 		string outPath;
-		if (project.appliedComponents.Contains("manila.console")) {
+		if (project.inheritsFrom.Equals("manila:console")) {
 			outPath = linkConsole(lo);
-		} else if (project.appliedComponents.Contains("manila.staticlib")) {
+		} else if (project.inheritsFrom.Equals("manila:staticlib")) {
 			outPath = linkStaticLib(lo);
 		} else {
-			throw new BuildException("No target specified");
+			throw new BuildException("No inheritance specified or invalid inheritance specified " + project.inheritsFrom);
 		}
 
 		al.compileProjectEnd(project);
