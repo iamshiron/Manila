@@ -21,6 +21,8 @@ public class ExtensionAPI {
 	}
 
 	private void loadPlugins() {
+		if (!Directory.Exists(pluginRoot)) return;
+
 		foreach (var file in Directory.GetFiles(pluginRoot)) {
 			if (!file.EndsWith(".dll")) continue;
 			try {
@@ -49,6 +51,11 @@ public class ExtensionAPI {
 			} catch (Exception ex) {
 				Console.WriteLine($"Failed to load assembly {file}: {ex.Message}");
 			}
+		}
+	}
+	public void releasePlugins() {
+		foreach (var plugin in plugins) {
+			plugin.release();
 		}
 	}
 

@@ -73,6 +73,7 @@ try {
 	logger.error(inner);
 }
 
+ExtensionAPI.getInstance().releasePlugins();
 AnsiConsole.MarkupLine("\n[skyblue1]Build Finished At " + DateTime.Now + "[/]");
 
 return error ? 1 : 0;
