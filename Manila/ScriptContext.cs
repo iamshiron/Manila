@@ -14,6 +14,8 @@ public class ScriptContext {
 	public Manila instance { get; private set; }
 	public API.Project project { get; private set; }
 
+	internal Dictionary<string, Type> enums { get; set; } = new();
+
 	private readonly Action<object[]> scriptLogger;
 
 
@@ -29,7 +31,7 @@ public class ScriptContext {
 	public void init() {
 		Logger.debug("Initializing script context...");
 
-		engine.AddHostObject("Manila", new API.Manila(this));
+		engine.AddHostObject("Manila", new API.ManilaEngine(this));
 		engine.AddHostObject("print", (params object[] args) => {
 			scriptLogger(args);
 		});
@@ -38,8 +40,6 @@ public class ScriptContext {
 			Logger.debug("Adding plugin: " + plugin.GetType().Name);
 			engine.AddHostObject(plugin.GetType().Name, plugin);
 		}
-
-		Dictionary<string, Type> enums = new();
 
 		// Add Script Attributes
 		foreach (var prop in project.GetType().GetProperties()) {

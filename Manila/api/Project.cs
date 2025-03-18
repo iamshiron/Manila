@@ -1,8 +1,6 @@
 using System.Dynamic;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.Remoting;
-using System.Text;
 using Microsoft.ClearScript;
+using Shiron.Manila.Exceptions;
 using Shiron.Manila.Ext;
 using Shiron.Manila.Utils;
 
@@ -13,14 +11,12 @@ public class Project : DynamicObject, IScriptableObject {
 	public Dir path { get; private set; }
 
 	public Dictionary<string, Task> tasks { get; } = new();
-	public List<string> appliedComponents { get; } = new();
+	public Dictionary<Type, object> appliedComponents { get; } = new();
 	public List<string> appliedPlugins { get; } = new();
 	public Dictionary<string, Delegate> dynamicMethods { get; } = new();
 
 	[ScriptAttribute]
 	public ELanguage language { get; private set; } = ELanguage.cpp;
-	[ScriptAttribute]
-	public string cppStandard { get; private set; } = "c++17";
 	[ScriptAttribute]
 	public string version { get; private set; } = "1.0.0";
 	[ScriptAttribute]
@@ -32,8 +28,6 @@ public class Project : DynamicObject, IScriptableObject {
 	public Dir binDir { get; private set; }
 	[ScriptAttribute]
 	public Dir objDir { get; private set; }
-	[ScriptAttribute]
-	public Dir runDir { get; private set; }
 
 	public List<IDependency> _dependencies { get; private set; } = new();
 	public Dictionary<string, SourceSet> _sourceSets { get; private set; } = new();
@@ -123,5 +117,12 @@ public class Project : DynamicObject, IScriptableObject {
 
 	public string getName() {
 		return name;
+	}
+
+	public T getComponent<T>() {
+		if (appliedComponents.TryGetValue(typeof(T), out var component)) {
+			return (T) component;
+		}
+		throw new BuildException($"Component '{typeof(T).Name}' not found.");
 	}
 }

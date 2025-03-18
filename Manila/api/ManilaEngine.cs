@@ -1,16 +1,14 @@
 using System.Diagnostics;
-using System.Text;
-using Microsoft.ClearScript;
 using Shiron.Manila.API.Toolchain;
 using Shiron.Manila.Ext;
 using Shiron.Manila.Utils;
 
 namespace Shiron.Manila.API;
 
-public class Manila {
+public class ManilaEngine {
 	private ScriptContext context;
 
-	public Manila(ScriptContext context) {
+	public ManilaEngine(ScriptContext context) {
 		this.context = context;
 	}
 
@@ -62,7 +60,39 @@ public class Manila {
 	/// </summary>
 	/// <param name="name">The plugin name</param>
 	public void apply(string name) {
-		context.instance.currentProject.appliedComponents.Add(name);
+		var component = ExtensionAPI.getInstance().getLoadedComponent(name);
+		if (component == null) throw new Exception("PluginComponent not found: " + name);
+
+		apply(component);
+	}
+	private void apply(PluginComponent component) {
+		var project = getProject();
+		project.appliedComponents.Add(component.GetType(), component);
+
+		foreach (var prop in component.GetType().GetProperties()) {
+			var type = prop.PropertyType;
+			var attr = prop.GetCustomAttributes(typeof(ScriptAttribute), false);
+
+			if (attr.Length > 0) {
+				Type delegateType = typeof(Action<>).MakeGenericType(type);
+				var setValue = (Action<object>) ((value) => {
+					Logger.debug("Setting value: " + value + " to " + prop.Name);
+					prop.SetValue(component, value);
+				});
+
+				context.engine.AddHostObject(prop.Name, setValue);
+
+				Logger.debug("Added property: " + prop.Name);
+			}
+
+			var typeAttr = type.GetCustomAttributes(typeof(ScriptEnum), false);
+			if (typeAttr.Length > 0) {
+				if (!context.enums.ContainsKey(type.Name)) {
+					context.enums.Add(type.Name, type);
+					context.engine.AddHostType(type.Name[1..], type);
+				}
+			}
+		}
 	}
 
 	/// <summary>
@@ -96,7 +126,6 @@ public class Manila {
 	public void run(Project project) {
 		Logger.debug("Running project: " + project.name);
 		Logger.debug("BinDir: " + project.binDir);
-		Logger.debug("RunDir: " + project.runDir);
 
 		var startInfo = new ProcessStartInfo() {
 			FileName = project.binDir + "/" + project.name + ".exe",

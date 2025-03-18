@@ -14,51 +14,54 @@ public abstract class ToolChain {
 	}
 
 	public void compile() {
-		var al = Shiron.Manila.Manila.getInstance().activityLogger;
+		throw new NotImplementedException();
+		/*
+				var al = Shiron.Manila.Manila.getInstance().activityLogger;
 
-		Logger.debug("BinDir: " + project.binDir);
-		Logger.debug("ObjDir: " + project.objDir);
-		Logger.debug("RunDir: " + project.runDir);
+				Logger.debug("BinDir: " + project.binDir);
+				Logger.debug("ObjDir: " + project.objDir);
+				Logger.debug("RunDir: " + project.runDir);
 
-		var root = project._sourceSets["main"].root;
-		var set = project._sourceSets["main"];
-		var objFiles = new List<string>();
+				var root = project._sourceSets["main"].root;
+				var set = project._sourceSets["main"];
+				var objFiles = new List<string>();
 
-		var lo = new LinkerOptions() { files = objFiles };
-		var co = new CompilerOptions() { includePaths = new List<string>() { root } };
+				var lo = new LinkerOptions() { files = objFiles };
+				var co = new CompilerOptions() { includePaths = new List<string>() { root } };
 
-		foreach (var d in project._dependencies) {
-			d.resolve(co, lo);
-		}
+				foreach (var d in project._dependencies) {
+					d.resolve(co, lo);
+				}
 
-		Logger.debug("Root: " + root);
-		al.compileProject(project);
+				Logger.debug("Root: " + root);
+				al.compileProject(project);
 
-		foreach (var file in set.files()) {
-			var realtiveToSrc = Path.GetRelativePath(root, file);
-			var objFile = project.objDir + "/" + realtiveToSrc + ".o";
-			var objFileDir = Path.GetDirectoryName(objFile);
+				foreach (var file in set.files()) {
+					var realtiveToSrc = Path.GetRelativePath(root, file);
+					var objFile = project.objDir + "/" + realtiveToSrc + ".o";
+					var objFileDir = Path.GetDirectoryName(objFile);
 
-			if (!Directory.Exists(objFileDir)) Directory.CreateDirectory(objFileDir);
+					if (!Directory.Exists(objFileDir)) Directory.CreateDirectory(objFileDir);
 
-			al.compileFile(file);
-			compileFile(file, objFile, co);
-			objFiles.Add(objFile);
-		}
+					al.compileFile(file);
+					compileFile(file, objFile, co);
+					objFiles.Add(objFile);
+				}
 
-		Logger.debug("Object Files: " + string.Join(" ", objFiles));
+				Logger.debug("Object Files: " + string.Join(" ", objFiles));
 
-		if (!Directory.Exists(project.binDir)) Directory.CreateDirectory(project.binDir);
-		string outPath;
-		if (project.appliedComponents.Contains("manila.console")) {
-			outPath = linkConsole(lo);
-		} else if (project.appliedComponents.Contains("manila.staticlib")) {
-			outPath = linkStaticLib(lo);
-		} else {
-			throw new BuildException("No target specified");
-		}
+				if (!Directory.Exists(project.binDir)) Directory.CreateDirectory(project.binDir);
+				string outPath;
+				if (project.appliedComponents.Contains("manila.console")) {
+					outPath = linkConsole(lo);
+				} else if (project.appliedComponents.Contains("manila.staticlib")) {
+					outPath = linkStaticLib(lo);
+				} else {
+					throw new BuildException("No target specified");
+				}
 
-		al.compileProjectEnd(project);
+				al.compileProjectEnd(project);
+				*/
 	}
 
 	public abstract void preBuild();

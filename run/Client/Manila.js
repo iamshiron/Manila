@@ -2,7 +2,7 @@ const project = Manila.getProject()
 const workspace = Manila.getWorkspace()
 const config = Manila.getBuildConfig()
 
-Manila.apply('manila.console')
+Manila.apply('shiron.manila:cpp@1.0.0:console')
 language(Language.cpp)
 cppStandard('C++23')
 toolchain(ToolChain.clang)

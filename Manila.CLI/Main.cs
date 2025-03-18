@@ -30,7 +30,6 @@ logger.start();
 
 Logger.init(verbose, quiet);
 
-Logger.debug("Discovering plugins...");
 ExtensionAPI.getInstance().init();
 
 if (args.Length < 1 || !args[0].StartsWith(':')) {
