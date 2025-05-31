@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Manila.CPP", "Manila.CPP\Ma
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Manila.Discord", "Manila.Discord\Manila.Discord.csproj", "{383D6207-0A85-429C-A809-468477EC5882}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Manila.JS", "Manila.JS\Manila.JS.csproj", "{EAC36CE8-51C6-4584-863B-E779ACEEB0F0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{383D6207-0A85-429C-A809-468477EC5882}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{383D6207-0A85-429C-A809-468477EC5882}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{383D6207-0A85-429C-A809-468477EC5882}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EAC36CE8-51C6-4584-863B-E779ACEEB0F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EAC36CE8-51C6-4584-863B-E779ACEEB0F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EAC36CE8-51C6-4584-863B-E779ACEEB0F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EAC36CE8-51C6-4584-863B-E779ACEEB0F0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
