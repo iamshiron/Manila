@@ -85,7 +85,7 @@ public static class ManilaCLI {
 
     public static int Main(string[] args) {
 #if DEBUG
-        Directory.SetCurrentDirectory("E:\\dev\\Manila\\manila\\run");
+        Directory.SetCurrentDirectory("E:\\dev\\Manila\\manila_lambda-flow\\run");
         Profiler.IsEnabled = true;
 #endif
 

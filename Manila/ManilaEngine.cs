@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Threading.Tasks;
+using Manila.LambdaFlow;
 using Shiron.Manila.API;
 using Shiron.Manila.Exceptions;
 using Shiron.Manila.Ext;
@@ -90,6 +91,8 @@ public sealed class ManilaEngine {
     /// Main entry point for the engine. Runs the workspace script and all project scripts.
     /// </summary>
     public async System.Threading.Tasks.Task Run() {
+        LambdaFlow.Init();
+
         if (!File.Exists("Manila.js")) {
             Logger.Error("No Manila.js file found in the current directory.");
             return;

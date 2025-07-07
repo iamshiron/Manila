@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Manila.Logging", "Manila.Lo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Manila.Profiling", "Manila.Profiling\Manila.Profiling.csproj", "{9219361C-D24C-4132-89A2-B638EC340817}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Manila.LambdaFlow", "Manila.LambdaFlow\Manila.LambdaFlow.csproj", "{F044ECE4-8023-47C3-A0AB-6D6B10B192AE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,6 +99,18 @@ Global
 		{9219361C-D24C-4132-89A2-B638EC340817}.Release|x64.Build.0 = Release|Any CPU
 		{9219361C-D24C-4132-89A2-B638EC340817}.Release|x86.ActiveCfg = Release|Any CPU
 		{9219361C-D24C-4132-89A2-B638EC340817}.Release|x86.Build.0 = Release|Any CPU
+		{F044ECE4-8023-47C3-A0AB-6D6B10B192AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F044ECE4-8023-47C3-A0AB-6D6B10B192AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F044ECE4-8023-47C3-A0AB-6D6B10B192AE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F044ECE4-8023-47C3-A0AB-6D6B10B192AE}.Debug|x64.Build.0 = Debug|Any CPU
+		{F044ECE4-8023-47C3-A0AB-6D6B10B192AE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F044ECE4-8023-47C3-A0AB-6D6B10B192AE}.Debug|x86.Build.0 = Debug|Any CPU
+		{F044ECE4-8023-47C3-A0AB-6D6B10B192AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F044ECE4-8023-47C3-A0AB-6D6B10B192AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F044ECE4-8023-47C3-A0AB-6D6B10B192AE}.Release|x64.ActiveCfg = Release|Any CPU
+		{F044ECE4-8023-47C3-A0AB-6D6B10B192AE}.Release|x64.Build.0 = Release|Any CPU
+		{F044ECE4-8023-47C3-A0AB-6D6B10B192AE}.Release|x86.ActiveCfg = Release|Any CPU
+		{F044ECE4-8023-47C3-A0AB-6D6B10B192AE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
