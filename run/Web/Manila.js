@@ -10,7 +10,7 @@ description('Demo Project JavaScript')
 sourceSets({
 	main: Manila.sourceSet(project.getPath().join('src/main')).include('**/*.js'),
 	test: Manila.sourceSet(project.getPath().join('src/test')).include('**/*.js'),
-	testAlias: Manila.sourceSet(project.getPath().join('src/test')).include('**/alias/*.js')
+	alias: Manila.sourceSet(project.getPath().join('src/test')).include('**/alias/*.js')
 })
 
 dependencies([Manila.npm('axios')])
