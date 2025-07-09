@@ -1,97 +1,252 @@
-﻿using Shiron.Manila.API;
+﻿using System.Reflection;
+using System.Threading.Tasks;
+using Shiron.Manila.API;
+using Shiron.Manila.Exceptions;
 using Shiron.Manila.Ext;
+using Shiron.Manila.Logging;
+using Shiron.Manila.Profiling;
 using Shiron.Manila.Utils;
 
 namespace Shiron.Manila;
 
 public sealed class ManilaEngine {
-    internal static ManilaEngine? instance = null;
-    public static ManilaEngine GetInstance() { if (instance == null) instance = new ManilaEngine(); return instance; }
+    private static ManilaEngine? _instance;
 
-    public string Root { get; private set; }
-    public Workspace? Workspace { get; }
+    /// <summary>
+    /// Gets the singleton instance of the ManilaEngine.
+    /// </summary>
+    public static ManilaEngine GetInstance() {
+        // Use null-coalescing assignment for a concise, thread-safe (in modern .NET) singleton initialization.
+        _instance ??= new ManilaEngine();
+        return _instance;
+    }
+
+    #region Properties
+
+    /// <summary>
+    /// Gets the root directory of the workspace.
+    /// </summary>
+    public string RootDir { get; }
+
+    /// <summary>
+    /// Gets the current workspace.
+    /// </summary>
+    public Workspace Workspace { get; }
+
+    /// <summary>
+    /// Gets the currently executing project. This is null if no project script is running.
+    /// </summary>
     public Project? CurrentProject { get; private set; }
+
+    /// <summary>
+    /// Gets the script context for the currently executing project.
+    /// </summary>
     public ScriptContext? CurrentContext { get; private set; }
+
+    /// <summary>
+    /// Gets the script context for the workspace.
+    /// </summary>
     public ScriptContext WorkspaceContext { get; }
-    public string DataDir { get; private set; }
+
+    /// <summary>
+    /// Gets the directory for Manila's data files.
+    /// </summary>
+    public string DataDir { get; }
+
+    // This is reverted to a public field to maintain API compatibility.
     public bool verboseLogger = false;
 
-    public static readonly string VERSION = "0.0.0";
+    /// <summary>
+    /// Gets the timestamp (in Unix milliseconds) when the engine was created.
+    /// </summary>
+    public readonly long EngineCreatedTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+    /// <summary>
+    /// Gets the execution graph for managing task dependencies.
+    /// </summary>
+    public ExecutionGraph ExecutionGraph { get; } = new();
+
+    /// <summary>
+    /// Gets the NuGet package manager.
+    /// </summary>
+    public NuGetManager NuGetManager { get; }
+
+    /// <summary>
+    /// Gets the version of the Manila engine.
+    /// </summary>
+    public static readonly string VERSION = "0.0.1";
+
+    #endregion
 
     private ManilaEngine() {
-        Root = Directory.GetCurrentDirectory();
-        Workspace = new Workspace(Root);
-        WorkspaceContext = new ScriptContext(this, Workspace, Path.Join(Root, "Manila.js"));
-        DataDir = Path.Join(Root, ".manila");
+        RootDir = Directory.GetCurrentDirectory();
+        Workspace = new(RootDir);
+        WorkspaceContext = new ScriptContext(this, Workspace, Path.Join(RootDir, "Manila.js"));
+        DataDir = Path.Join(RootDir, ".manila");
+        NuGetManager = new(Path.Join(DataDir, "nuget"));
     }
 
     /// <summary>
     /// Main entry point for the engine. Runs the workspace script and all project scripts.
     /// </summary>
-    public void Run() {
-        if (!System.IO.File.Exists("Manila.js")) {
+    public async System.Threading.Tasks.Task Run() {
+        if (!File.Exists("Manila.js")) {
             Logger.Error("No Manila.js file found in the current directory.");
             return;
         }
 
-        var workspaceScript = Path.Join(Root, "Manila.js");
+        Logger.Log(new EngineStartedLogEntry(RootDir, DataDir));
+
+        var workspaceScript = Path.Join(RootDir, "Manila.js");
         var files = Directory.GetFiles(".", "Manila.js", SearchOption.AllDirectories)
             .Where(f => !Path.GetFullPath(f).Equals(Path.GetFullPath("Manila.js")))
             .ToList();
 
-        RunWorkspaceScript();
-        foreach (var script in files) {
-            RunProjectScript(script);
-        }
-
-        foreach (var f in Workspace!.ProjectFilters) {
-            foreach (var p in Workspace.Projects.Values) {
-                if (f.Item1.Predicate(p)) {
-                    foreach (var type in p.plugins) {
-                        var plugin = ExtensionManager.GetInstance().GetPlugin(type);
-                        foreach (var e in plugin.Enums) {
-                            // Applying duplicate enums is already handled in the ApplyEnum method.
-                            WorkspaceContext.ApplyEnum(e);
-                        }
-                    }
-                    f.Item2.Invoke(p);
+        using (new ProfileScope("Running Scripts")) {
+            try {
+                await RunWorkspaceScript();
+                foreach (var script in files) {
+                    await RunProjectScript(script);
                 }
+            } catch {
+                throw;
+            }
+
+            foreach (var f in Workspace!.ProjectFilters) {
+                foreach (var p in Workspace.Projects.Values) {
+                    if (f.Item1.Predicate(p)) {
+                        foreach (var type in p.plugins) {
+                            var plugin = ExtensionManager.GetInstance().GetPlugin(type);
+                            foreach (var e in plugin.Enums) {
+                                WorkspaceContext.ApplyEnum(e);
+                            }
+                        }
+                        f.Item2.Invoke(p);
+                    }
+                }
+            }
+
+            Logger.Log(new ProjectsInitializedLogEntry(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - EngineCreatedTime));
+        }
+    }
+
+    /// <summary>
+    /// Executes a specific project script.
+    /// </summary>
+    /// <param name="path">The relative path to the project script from the root directory.</param>
+    public async System.Threading.Tasks.Task RunProjectScript(string path) {
+        using (new ProfileScope(MethodBase.GetCurrentMethod()!)) {
+            var projectRoot = Path.GetDirectoryName(Path.Join(Directory.GetCurrentDirectory(), path));
+            var scriptPath = Path.Join(Directory.GetCurrentDirectory(), path);
+            var safeProjectRoot = projectRoot ?? Directory.GetCurrentDirectory();
+            var projectName = Path.GetRelativePath(Directory.GetCurrentDirectory(), safeProjectRoot).ToLower().Replace(Path.DirectorySeparatorChar, ':');
+
+            Logger.Log(new ProjectDiscoveredLogEntry(projectRoot!, scriptPath));
+
+            CurrentProject = new Project(projectName, projectRoot!, Workspace);
+            Workspace!.Projects.Add(projectName, CurrentProject);
+            CurrentContext = new ScriptContext(this, CurrentProject, Path.Join(RootDir, path));
+
+            CurrentContext.ApplyEnum<EPlatform>();
+            CurrentContext.ApplyEnum<EArchitecture>();
+
+            CurrentContext.Init();
+            try {
+                await CurrentContext.ExecuteAsync();
+            } catch {
+                throw;
+            }
+
+            Logger.Log(new ProjectInitializedLogEntry(CurrentProject));
+
+            CurrentProject = null;
+            CurrentContext = null;
+        }
+    }
+    /// <summary>
+    /// Executes the workspace script (Manila.js in the root directory).
+    /// </summary>
+    public async System.Threading.Tasks.Task RunWorkspaceScript() {
+        using (new ProfileScope(MethodBase.GetCurrentMethod()!)) {
+            Logger.Debug("Running workspace script: " + WorkspaceContext.ScriptPath);
+
+            WorkspaceContext.ApplyEnum<EPlatform>();
+            WorkspaceContext.ApplyEnum<EArchitecture>();
+
+            WorkspaceContext.Init();
+            try {
+                await WorkspaceContext.ExecuteAsync();
+            } catch {
+                throw;
             }
         }
     }
 
     /// <summary>
-    /// Runs a project script.
+    /// Constructs the execution graph and runs the build logic for a specified task.
     /// </summary>
-    /// <param name="path">The relative path from the root</param>
-    public void RunProjectScript(string path) {
-        Logger.Debug("Running project script: " + path);
-        string projectPath = Path.GetDirectoryName(Path.GetRelativePath(Root, path));
-        string name = projectPath.ToLower().Replace(Path.DirectorySeparatorChar, ':');
+    /// <param name="taskID">The ID of the task to execute.</param>
+    public void ExecuteBuildLogic(string taskID) {
+        // Add all existing tasks to the graph, hopefully I'll find a better solution for this in the future
 
-        CurrentProject = new API.Project(name, projectPath, Workspace);
-        Workspace!.Projects.Add(name, CurrentProject);
-        CurrentContext = new ScriptContext(this, CurrentProject, Path.Join(Root, path));
+        ExecutionGraph.ExecutionLayer[] layers = [];
+        using (new ProfileScope("Building Dependency Tree")) {
+            foreach (var t in Workspace.Tasks) {
+                List<ExecutableObject> dependencies = [];
+                foreach (var d in t.Dependencies) {
+                    dependencies.Add(Workspace.GetTask(d));
+                }
+                ExecutionGraph.Attach(t, dependencies);
+            }
+            foreach (var p in Workspace.Projects.Values) {
+                foreach (var t in p.Tasks) {
+                    List<ExecutableObject> dependencies = [];
+                    foreach (var d in t.Dependencies) {
+                        dependencies.Add(Workspace.GetTask(d));
+                    }
+                    ExecutionGraph.Attach(t, dependencies);
+                }
+            }
 
-        CurrentContext.ApplyEnum<EPlatform>();
-        CurrentContext.ApplyEnum<EArchitecture>();
+            layers = ExecutionGraph.GetExecutionLayers(taskID);
+        }
 
-        CurrentContext.Init();
-        CurrentContext.Execute();
+        Logger.Log(new BuildLayersLogEntry(layers));
 
-        CurrentProject = null;
-        CurrentContext = null;
+        long startTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        Logger.Log(new BuildStartedLogEntry());
+
+        using (new ProfileScope("Executing Execution Layers")) {
+            try {
+                int layerIndex = 0;
+                foreach (var layer in layers) {
+                    using (new ProfileScope($"Executing Layer {layerIndex}")) {
+                        Guid layerContextID = Guid.NewGuid();
+                        Logger.Log(new BuildLayerStartedLogEntry(layer, layerContextID, layerIndex));
+                        using (LogContext.PushContext(layerContextID)) {
+                            List<System.Threading.Tasks.Task> layerTasks = [];
+
+                            foreach (var o in layer.Items) {
+                                layerTasks.Add(System.Threading.Tasks.Task.Run(() => o.Execute()));
+                            }
+
+                            System.Threading.Tasks.Task.WhenAll(layerTasks).GetAwaiter().GetResult();
+                            Logger.Log(new BuildLayerCompletedLogEntry(layer, layerContextID, layerIndex));
+                        }
+
+                        layerIndex++;
+                    }
+                }
+                Logger.Log(new BuildCompletedLogEntry(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - startTime));
+            } catch (Exception e) {
+                var ex = new BuildException(e.Message, e);
+                Logger.Log(new BuildFailedLogEntry(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - startTime, e));
+                throw ex;
+            }
+        }
     }
-    /// <summary>
-    /// Runs the workspace script. Always Manila.js in the root directory.
-    /// </summary>
-    public void RunWorkspaceScript() {
-        Logger.Debug("Running workspace script: " + WorkspaceContext.ScriptPath);
 
-        WorkspaceContext.ApplyEnum<EPlatform>();
-        WorkspaceContext.ApplyEnum<EArchitecture>();
-
-        WorkspaceContext.Init();
-        WorkspaceContext.Execute();
+    public bool HasTask(string task) {
+        return Workspace.HasTask(task);
     }
 }

@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Microsoft.ClearScript;
-using Shiron.Manila.Utils;
+using Shiron.Manila.Exceptions;
+using Shiron.Manila.Logging;
 
 namespace Shiron.Manila.API;
 
@@ -16,7 +17,7 @@ public abstract class ProjectFilter {
         if (o is string) {
             var s = (string) o;
             if (s == "*") return new ProjectFilterAll();
-            if (s.StartsWith(":")) return new ProjectFilterName(s);
+            return new ProjectFilterName(s);
         }
 
         if (o is IList<object> list) {
@@ -37,7 +38,7 @@ public abstract class ProjectFilter {
                 }
             }
 
-            string objString = o.ToString();
+            string objString = o?.ToString() ?? string.Empty;
             if (objString.StartsWith("/") && objString.Contains("/")) {
                 int lastSlashIndex = objString.LastIndexOf('/');
                 string pattern = objString.Substring(1, lastSlashIndex - 1);
@@ -61,7 +62,7 @@ public abstract class ProjectFilter {
             }
         }
 
-        throw new Exception("Invalid project filter. " + o);
+        throw new ManilaException("Invalid project filter. " + o);
     }
 }
 
@@ -103,7 +104,7 @@ public class ProjectFilterArray : ProjectFilter {
     }
 
     public override bool Predicate(Project p) {
-        foreach (var filter in _filters) if (!filter.Predicate(p)) return false;
-        return true;
+        foreach (var filter in _filters) if (filter.Predicate(p)) return true;
+        return false;
     }
 }

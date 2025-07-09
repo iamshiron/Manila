@@ -2,6 +2,9 @@ using Microsoft.ClearScript;
 using Shiron.Manila.Ext;
 using Shiron.Manila.Exceptions;
 using Shiron.Manila.Utils;
+using Shiron.Manila.Logging;
+using Shiron.Manila.Profiling;
+using System.Reflection;
 
 namespace Shiron.Manila.API;
 
@@ -22,7 +25,7 @@ public sealed class Manila(ScriptContext context) : ExposedDynamicObject {
     /// <exception cref="Exception">Thrown when not in a project context.</exception>
     public Project getProject() {
         if (ManilaEngine.GetInstance().CurrentProject == null) throw new ContextException(Exceptions.Context.WORKSPACE, Exceptions.Context.PROJECT);
-        return ManilaEngine.GetInstance().CurrentProject;
+        return ManilaEngine.GetInstance().CurrentProject!;
     }
 
     /// <summary>
@@ -59,6 +62,10 @@ public sealed class Manila(ScriptContext context) : ExposedDynamicObject {
         return new SourceSet(origin);
     }
 
+    public async void sleep(int milliseconds) {
+        await System.Threading.Tasks.Task.Delay(milliseconds);
+    }
+
     /// <summary>
     /// Creates a new task with the specified name.
     /// </summary>
@@ -68,7 +75,7 @@ public sealed class Manila(ScriptContext context) : ExposedDynamicObject {
         try {
             return new Task(name, getProject(), Context, Context.ScriptPath);
         } catch (ContextException e) {
-            if (e.cIs != Exceptions.Context.WORKSPACE) throw;
+            if (e.Is != Exceptions.Context.WORKSPACE) throw;
             return new Task(name, getWorkspace(), Context, Context.ScriptPath);
         }
     }
@@ -78,8 +85,8 @@ public sealed class Manila(ScriptContext context) : ExposedDynamicObject {
     /// </summary>
     /// <param name="path">The path of the directory.</param>
     /// <returns>A new directory reference with the specified path.</returns>
-    public Dir dir(string path) {
-        return new Dir(path);
+    public DirHandle dir(string path) {
+        return new DirHandle(path);
     }
 
     /// <summary>
@@ -87,8 +94,8 @@ public sealed class Manila(ScriptContext context) : ExposedDynamicObject {
     /// </summary>
     /// <param name="path">The path of the file.</param>
     /// <returns>A new file reference with the specified path.</returns>
-    public File file(string path) {
-        return new File(path);
+    public FileHandle file(string path) {
+        return new FileHandle(path);
     }
 
     /// <summary>
@@ -115,8 +122,10 @@ public sealed class Manila(ScriptContext context) : ExposedDynamicObject {
     /// </summary>
     /// <param name="component">The plugin component to apply to the current project.</param>
     public void apply(PluginComponent component) {
-        Logger.Debug("Applying: " + component);
-        getProject().ApplyComponent(component);
+        using (new ProfileScope(MethodBase.GetCurrentMethod()!)) {
+            Logger.Debug("Applying: " + component);
+            getProject().ApplyComponent(component);
+        }
     }
 
     /// <summary>
@@ -125,8 +134,10 @@ public sealed class Manila(ScriptContext context) : ExposedDynamicObject {
     /// <param name="o">The type of filter, a subclass of <see cref="ProjectFilter"/></param>
     /// <param name="a">The action to run</param>
     public void onProject(object o, dynamic a) {
-        var filter = ProjectFilter.From(o);
-        getWorkspace().ProjectFilters.Add(new Tuple<ProjectFilter, Action<Project>>(filter, (project) => a(project)));
+        using (new ProfileScope(MethodBase.GetCurrentMethod()!)) {
+            var filter = ProjectFilter.From(o);
+            getWorkspace().ProjectFilters.Add(new Tuple<ProjectFilter, Action<Project>>(filter, (project) => a(project)));
+        }
     }
 
     /// <summary>
@@ -138,9 +149,7 @@ public sealed class Manila(ScriptContext context) : ExposedDynamicObject {
         var task = getWorkspace().GetTask(key);
         if (task == null) throw new Exception("Task not found: " + key);
 
-        ApplicationLogger.TaskStarted(task);
         task.Action?.Invoke();
-        ApplicationLogger.TaskFinished();
     }
 
     /// <summary>
@@ -150,11 +159,17 @@ public sealed class Manila(ScriptContext context) : ExposedDynamicObject {
     /// <param name="project">The project</param>
     /// <param name="config">The config</param>
     public void build(Workspace workspace, Project project, BuildConfig config) {
-        project.GetLanguageComponent().Build(workspace, project, config);
+        using (new ProfileScope(MethodBase.GetCurrentMethod()!)) {
+            project.GetLanguageComponent().Build(workspace, project, config);
+        }
     }
-    public void run(UnresolvedProject project) { run(project.Resolve()); }
+    public void run(UnresolvedProject project) {
+        run(project.Resolve());
+    }
     public void run(Project project) {
-        project.GetLanguageComponent().Run(project);
+        using (new ProfileScope(MethodBase.GetCurrentMethod()!)) {
+            project.GetLanguageComponent().Run(project);
+        }
     }
     public string getEnv(string key) {
         return Context.GetEnvironmentVariable(key);
@@ -176,9 +191,14 @@ public sealed class Manila(ScriptContext context) : ExposedDynamicObject {
     }
 
     public object import(string key) {
-        var t = Activator.CreateInstance(ExtensionManager.GetInstance().GetAPIType(key));
-        Logger.Debug($"Importing {key} as {t}");
+        using (new ProfileScope(MethodBase.GetCurrentMethod()!)) {
+            var t = Activator.CreateInstance(ExtensionManager.GetInstance().GetAPIType(key));
+            Logger.Debug($"Importing {key} as {t}");
 
-        return t;
+            if (t == null)
+                throw new Exception($"Failed to import API type for key: {key}");
+
+            return t;
+        }
     }
 }

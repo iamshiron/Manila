@@ -4,6 +4,7 @@ using System.Reflection;
 using Shiron.Manila.Ext;
 using Shiron.Manila.Utils;
 using Shiron.Manila.Attributes;
+using Shiron.Manila.Logging;
 
 namespace Shiron.Manila.API;
 
@@ -12,7 +13,7 @@ namespace Shiron.Manila.API;
 /// </summary>
 public class Component(string path) : DynamicObject, IScriptableObject {
     [ScriptProperty(true)]
-    public Dir Path { get; private set; } = new Dir(path);
+    public DirHandle Path { get; private set; } = new DirHandle(path);
 
     public Dictionary<Type, PluginComponent> PluginComponents { get; } = [];
     public List<Type> plugins { get; } = [];
@@ -25,8 +26,8 @@ public class Component(string path) : DynamicObject, IScriptableObject {
     /// </summary>
     /// <returns>The identifier</returns>
     public virtual string GetIdentifier() {
-        string relativeDir = System.IO.Path.GetRelativePath(ManilaEngine.GetInstance().Root, Path.path);
-        return ":" + relativeDir.Replace(System.IO.Path.DirectorySeparatorChar, ':').ToLower();
+        string relativeDir = System.IO.Path.GetRelativePath(ManilaEngine.GetInstance().RootDir, Path.Handle);
+        return relativeDir.Replace(System.IO.Path.DirectorySeparatorChar, ':').ToLower();
     }
 
     public void OnExposedToScriptCode(ScriptEngine engine) {
@@ -83,7 +84,10 @@ public class Component(string path) : DynamicObject, IScriptableObject {
         Logger.Debug($"Added function '{prop.Name}' to script context.");
     }
 
-    public override bool TryInvokeMember(InvokeMemberBinder binder, object?[] args, out object result) {
+    public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result) {
+        args ??= [];
+        result = null;
+
         if (DynamicMethods.TryGetValue(binder.Name, out var methods)) {
             foreach (var method in methods) {
                 if (!FunctionUtils.SameParametes(method.Method, args)) continue;
@@ -96,7 +100,11 @@ public class Component(string path) : DynamicObject, IScriptableObject {
                     // Convert enum strings to enum values
                     if (param.ParameterType.IsEnum) {
                         var type = param.ParameterType;
-                        args[i] = Enum.Parse(type, args[i].ToString());
+                        if (args[i] != null) {
+                            args[i] = Enum.Parse(type, args[i]!.ToString()!);
+                        } else {
+                            throw new ArgumentNullException($"Argument at position {i} for enum parameter '{param.Name}' cannot be null.");
+                        }
                     }
                 }
 
@@ -118,16 +126,23 @@ public class Component(string path) : DynamicObject, IScriptableObject {
         Logger.Debug($"Applying component '{component}'.");
 
         if (PluginComponents.ContainsKey(component.GetType())) {
-            Logger.Warn($"Component '{component}' already applied.");
+            Logger.Warning($"Component '{component}' already applied.");
             return;
         }
         PluginComponents.Add(component.GetType(), component);
 
-        foreach (var e in component.plugin.Enums) {
-            ManilaEngine.GetInstance().CurrentContext.ApplyEnum(e);
-        }
+        if (component.plugin != null) {
+            foreach (var e in component.plugin.Enums) {
+                var currentContext = ManilaEngine.GetInstance().CurrentContext;
+                if (currentContext != null) {
+                    currentContext.ApplyEnum(e);
+                } else {
+                    Logger.Warning("CurrentContext is null. Cannot apply enum.");
+                }
+            }
 
-        ApplyPlugin(component.plugin);
+            ApplyPlugin(component.plugin);
+        }
 
         foreach (var prop in component.GetType().GetProperties()) {
             if (prop.GetCustomAttribute<ScriptProperty>() == null) continue;
@@ -140,18 +155,46 @@ public class Component(string path) : DynamicObject, IScriptableObject {
     /// </summary>
     /// <param name="plugin">The instance of the plugin</param>
     public void ApplyPlugin(ManilaPlugin plugin) {
-        ManilaEngine.GetInstance().CurrentContext.ScriptEngine.AddHostType(plugin.GetType().Name, plugin.GetType());
-        foreach (var t in plugin.Dependencies) {
-            DependencyTypes.Add(t);
-            ManilaEngine.GetInstance().CurrentContext.ManilaAPI.AddFunction((Activator.CreateInstance(t) as Dependency).Type, delegate (dynamic[] args) {
-                var dep = Activator.CreateInstance(t) as Dependency;
-                dep.Create((object[]) args);
-                return dep;
-            });
+        var engineInstance = ManilaEngine.GetInstance();
+        var currentContext = engineInstance.CurrentContext;
+        if (currentContext == null) {
+            Logger.Warning("CurrentContext is null. Cannot apply plugin.");
+            return;
+        }
+        var scriptEngine = currentContext.ScriptEngine;
+        if (scriptEngine == null) {
+            Logger.Warning("ScriptEngine is null. Cannot add host type.");
+            return;
+        }
+
+        scriptEngine.AddHostType(plugin.GetType().Name, plugin.GetType());
+
+        if (plugin.Dependencies != null) {
+            foreach (var t in plugin.Dependencies) {
+                if (t == null) continue;
+                DependencyTypes.Add(t);
+
+                if (currentContext.ManilaAPI == null) {
+                    Logger.Warning("ManilaAPI is null. Cannot add dependency function.");
+                    continue;
+                }
+
+                currentContext.ManilaAPI.AddFunction(
+                    (Activator.CreateInstance(t) as Dependency)?.Type!,
+                    delegate (dynamic[] args) {
+                        if (Activator.CreateInstance(t) is not Dependency dep) {
+                            Logger.Warning($"Could not create instance of dependency type '{t}'.");
+                            return null;
+                        }
+                        dep.Create((object[]) args);
+                        return dep;
+                    }
+                );
+            }
         }
 
         if (plugins.Contains(plugin.GetType())) {
-            Logger.Warn($"Plugin '{plugin}' already applied.");
+            Logger.Warning($"Plugin '{plugin}' already applied.");
             return;
         }
 

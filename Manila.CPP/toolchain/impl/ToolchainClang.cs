@@ -70,9 +70,7 @@ public class ToolchainClang : Toolchain {
             args.Add("-D" + d);
         }
 
-        return ShellUtils.Run("clang++", [.. args], Path.Join(workspace.Path),
-            ManilaEngine.GetInstance().verboseLogger ? (s) => ApplicationLogger.WriteLine(s) : null, (s) => ApplicationLogger.ApplicationError(s)
-        );
+        return ShellUtils.Run("clang++", [.. args], Path.Join(workspace.Path));
     }
 
     /// <summary>
@@ -83,9 +81,7 @@ public class ToolchainClang : Toolchain {
     /// <returns>Exit code of the linker</returns>
     public int InvokeLibLinker(params string[] a) {
         List<string> args = [.. a];
-        return ShellUtils.Run("llvm-ar", [.. args], Path.Join(workspace.Path),
-            ManilaEngine.GetInstance().verboseLogger ? (s) => ApplicationLogger.WriteLine(s) : null, (s) => ApplicationLogger.ApplicationError(s)
-        );
+        return ShellUtils.Run("llvm-ar", [.. args], Path.Join(workspace.Path));
     }
 
     /// <summary>
@@ -101,9 +97,7 @@ public class ToolchainClang : Toolchain {
             args.Add("-l" + l);
         }
 
-        return ShellUtils.Run("clang++", [.. args], Path.Join(workspace.Path),
-            ManilaEngine.GetInstance().verboseLogger ? (s) => ApplicationLogger.WriteLine(s) : null, (s) => ApplicationLogger.ApplicationError(s)
-        );
+        return ShellUtils.Run("clang++", [.. args], Path.Join(workspace.Path));
     }
 
     /// <summary>
@@ -126,7 +120,7 @@ public class ToolchainClang : Toolchain {
             var startTime = System.Diagnostics.Stopwatch.StartNew();
 
             // Run the compiler
-            ApplicationLogger.ApplicationLog(Path.GetRelativePath(setRoot, file));
+            ManilaCPP.Instance.Debug(Path.GetRelativePath(setRoot, file));
             if (InvokeCompiler("-c", file, "-o", objFile) != 0) {
                 throw new Exception("Failed to compile file: " + file);
             }
@@ -224,8 +218,7 @@ public class ToolchainClang : Toolchain {
 
         var sourceSet = project._sourceSets["main"];
         foreach (var file in sourceSet.files()) {
-            var f = Path.Join(sourceSet.Root, file.path);
-            objectFiles.Add(CompileFile(sourceSet.Root, f, Path.Join(objDir, sourceSet.Root)));
+            objectFiles.Add(CompileFile(sourceSet.Root, file.Handle, Path.Join(objDir, Path.GetRelativePath(project.Path.Handle, sourceSet.Root))));
         }
 
         LinkFiles(objectFiles, binDir, cppComponent);

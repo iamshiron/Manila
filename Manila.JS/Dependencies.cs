@@ -37,6 +37,6 @@ public class DependencyNPM : Dependency {
     }
 
     public override void Resolve(Project project) {
-        Logger.Debug("Resolving NPM dependency: " + this.Name + "@" + this.Version);
+        ManilaJS.Instance.Debug("Resolving NPM dependency: " + this.Name + "@" + this.Version);
     }
 }

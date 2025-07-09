@@ -4,7 +4,7 @@ using Shiron.Manila.Ext;
 using Shiron.Manila.Attributes;
 
 public class ManilaJS : ManilaPlugin {
-    public ManilaJS() : base("shiron.manila", "javascript", "1.0.0", ["Shiron"], ["Discord.Net@3.17.2"]) {
+    public ManilaJS() : base("shiron.manila", "javascript", "1.0.0", ["Shiron"], []) {
     }
 
     [PluginInstance]

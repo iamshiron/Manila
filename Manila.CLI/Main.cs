@@ -1,141 +1,119 @@
 using Shiron.Manila;
-using Shiron.Manila.Ext;
 using Shiron.Manila.Exceptions;
-using Shiron.Manila.Utils;
+using Shiron.Manila.Ext;
+using Shiron.Manila.CLI;
+using Shiron.Manila.CLI.Commands;
 using Spectre.Console;
-using Shiron.Manila.API;
+using Spectre.Console.Cli;
+using Shiron.Manila.Profiling;
+using Shiron.Manila.CLI.Exceptions;
 
-Directory.SetCurrentDirectory("./run");
-var startTime = DateTime.Now.Ticks;
+namespace Shiron.Manila.CLI;
 
-var verbose = args.Contains("--verbose") || args.Contains("-v");
-var stackTrace = args.Contains("--stack-trace");
-var quiet = args.Contains("--quiet") || args.Contains("-q");
+public static class ManilaCLI {
+    public static string PluginDir => Path.Combine(Directory.GetCurrentDirectory(), ".manila", "plugins");
+    public static string NugetDir => Path.Combine(Directory.GetCurrentDirectory(), ".manila", "nuget");
+    public static string ProfilingDir => Path.Combine(Directory.GetCurrentDirectory(), ".manila", "profiles");
+    public static CommandApp<DefaultCommand> CommandApp = new CommandApp<DefaultCommand>();
 
-if (!quiet) {
-    AnsiConsole.MarkupLine(@"[blue] __  __             _ _[/]");
-    AnsiConsole.MarkupLine(@"[blue]|  \/  | __ _ _ __ (_| | __ _[/]");
-    AnsiConsole.MarkupLine(@"[blue]| |\/| |/ _` | '_ \| | |/ _` |[/]");
-    AnsiConsole.MarkupLine(@"[blue]| |  | | (_| | | | | | | (_| |[/]");
-    AnsiConsole.MarkupLine($"[blue]|_|  |_|\\__,_|_| |_|_|_|\\__,_|[/] [magenta]v{ManilaEngine.VERSION}[/]\n");
-}
+    public static void SetupInitialComponents(DefaultCommandSettings settings) {
+        AnsiConsoleRenderer.Init(settings.Quiet, settings.Verbose, settings.Structured, settings.StackTrace);
+    }
 
-Logger.Init(verbose, quiet);
-ApplicationLogger.Init(quiet, stackTrace);
+    public static void InitExtensions() {
+        using (new ProfileScope("Initializing Plugins")) {
+            var extensionManager = ExtensionManager.GetInstance();
+            extensionManager.Init("./.manila/plugins");
+            extensionManager.LoadPlugins();
+            extensionManager.InitPlugins();
+        }
+    }
 
-var engine = ManilaEngine.GetInstance();
-engine.verboseLogger = verbose;
+    public static async Task StartEngine(ManilaEngine engine) {
+        await engine.Run();
+        if (engine.Workspace == null) throw new Exception("Workspace not found!");
+    }
 
-var extensionManager = ExtensionManager.GetInstance();
-
-extensionManager.Init("./.manila/plugins");
-extensionManager.LoadPlugins();
-extensionManager.InitPlugins();
-
-ApplicationLogger.WriteLine("Initializing...");
-engine.Run();
-
-if (engine.Workspace == null) throw new Exception("Workspace not found");
-ApplicationLogger.WriteLine("Initialization took: " + (DateTime.Now.Ticks - startTime) / TimeSpan.TicksPerMillisecond + "ms\n");
-foreach (var arg in args) {
-    if (arg.StartsWith(":")) {
+    public static int RunTask(ManilaEngine engine, ExtensionManager extensionManager, DefaultCommandSettings settings, string task) {
         try {
-            ApplicationLogger.BuildStarted();
-            var task = engine.Workspace.GetTask(arg);
+            engine.ExecuteBuildLogic(task[1..]);
+        } catch (ScriptingException e) {
+            //  scripting errors are common user-facing issues.
+            AnsiConsole.MarkupLine($"\n[red]{Emoji.Known.CrossMark} Script Error:[/] [white]{Markup.Escape(e.Message)}[/]");
+            AnsiConsole.MarkupLine("[grey]This error occurred while executing a script. Check the script for syntax errors or logic issues.[/]");
+            AnsiConsole.MarkupLine("[grey]Run with --stack-trace for a detailed technical log.[/]");
+            if (settings.StackTrace) Utils.TryWriteException(e.InnerException ?? e);
 
-            var order = task.GetExecutionOrder();
-            Logger.Debug("Execution order: " + string.Join(", ", order));
+            return ExitCodes.SCRIPTING_ERROR;
+        } catch (BuildException e) {
+            // build errors indicate a failure in the compilation or packaging process.
+            AnsiConsole.MarkupLine($"\n[red]{Emoji.Known.CrossMark} Build Error:[/] [white]{e.Message}[/]");
+            AnsiConsole.MarkupLine("[grey]The project failed to build. Review the build configuration and source files for errors.[/]");
+            AnsiConsole.MarkupLine("[grey]Run with --stack-trace for a detailed technical log.[/]");
+            if (settings.StackTrace) Utils.TryWriteException(e.InnerException ?? e);
 
-            foreach (var t in order) {
-                var taskToRun = engine.Workspace.GetTask(t);
-                ApplicationLogger.TaskStarted(taskToRun);
+            return ExitCodes.BUILD_ERROR;
+        } catch (ConfigurationException e) {
+            // configuration errors are often due to invalid settings.
+            AnsiConsole.MarkupLine($"\n[yellow]{Emoji.Known.Warning} Configuration Error:[/] [white]{e.Message}[/]");
+            AnsiConsole.MarkupLine("[grey]There is a problem with a configuration file or setting. Please verify it is correct.[/]");
+            AnsiConsole.MarkupLine("[grey]Run with --stack-trace for more technical details.[/]");
+            if (settings.StackTrace) Utils.TryWriteException(e.InnerException ?? e);
 
-                try {
-                    if (taskToRun.Action == null) Logger.Warn("Task has no action: " + t);
-                    else taskToRun.Action.Invoke();
-                    ApplicationLogger.TaskFinished();
-                } catch (Exception e) {
-                    throw new TaskFailedException(taskToRun, e);
-                }
-            }
+            return ExitCodes.CONFIGURATION_ERROR;
+        } catch (ManilaException e) {
+            // this is a known, handled application error.
+            AnsiConsole.MarkupLine($"\n[yellow]{Emoji.Known.Warning} Application Error:[/] [white]{e.Message}[/]");
+            AnsiConsole.MarkupLine($"[grey]A known issue ('{e.GetType().Name}') occurred. This is a handled error condition.[/]");
+            AnsiConsole.MarkupLine("[grey]Run with --stack-trace for more technical details.[/]");
+            if (settings.StackTrace) Utils.TryWriteException(e);
 
-            ApplicationLogger.BuildFinished();
-        } catch (TaskNotFoundException e) {
-            ApplicationLogger.BuildFinished(e);
-        } catch (TaskFailedException e) {
-            ApplicationLogger.BuildFinished(e);
+            return ExitCodes.KNOWN_ERROR;
         } catch (Exception e) {
-            ApplicationLogger.BuildFinished(e);
+            // this is a critical, unexpected error that likely indicates a bug.
+            AnsiConsole.MarkupLine($"\n[red]{Emoji.Known.Collision} Unexpected System Exception:[/] [white]{e.GetType().Name}[/]");
+            AnsiConsole.MarkupLine("[red]This may indicate a bug in the application. Please report this issue.[/]");
+            AnsiConsole.MarkupLine("[grey]Run with --stack-trace for a detailed error log.[/]");
+            if (settings.StackTrace) Utils.TryWriteException(e);
+
+            return ExitCodes.UNKNOWN_ERROR;
         }
 
         extensionManager.ReleasePlugins();
-        return;
-    } else {
-        if (arg == "tasks") {
-            AnsiConsole.Write(new Rule("[bold yellow]Available Tasks[/]").RuleStyle("grey").DoubleBorder());
+        return ExitCodes.SUCCESS;
+    }
 
-            var workspaceTable = new Table().Border(TableBorder.Rounded);
-            workspaceTable.AddColumn(new TableColumn("[cyan]Task[/]"));
-            workspaceTable.AddColumn(new TableColumn("[green]Description[/]"));
-            workspaceTable.AddColumn(new TableColumn("[magenta]Direct Dependencies[/]"));
+    public static int Main(string[] args) {
+#if DEBUG
+        Directory.SetCurrentDirectory("E:\\dev\\Manila\\manila_js\\run");
+        Profiler.IsEnabled = true;
+#endif
 
-            foreach (var t in engine.Workspace.Tasks) {
-                workspaceTable.AddRow(
-                    $"[bold cyan]{t.GetIdentifier()}[/]",
-                    t.Description ?? "",
-                    t.dependencies.Count > 0 ? $"[italic]{string.Join(", ", t.dependencies)}[/]" : "");
-            }
+        var logOptions = new {
+            Structured = args.Contains("--structured") || args.Contains("--json"),
+            Verbose = args.Contains("--verbose"),
+            Quiet = args.Contains("--quiet"),
+            StackTrace = args.Contains("--stack-trace")
+        };
 
-            AnsiConsole.MarkupLine("\n[bold blue]Workspace Tasks[/]");
-            AnsiConsole.Write(workspaceTable);
-
-            foreach (var p in engine.Workspace.Projects) {
-                var project = p.Value;
-
-                var projectTable = new Table().Border(TableBorder.Rounded);
-                projectTable.AddColumn(new TableColumn("[cyan]Task[/]"));
-                projectTable.AddColumn(new TableColumn("[green]Description[/]"));
-                projectTable.AddColumn(new TableColumn("[magenta]Direct Dependencies[/]"));
-
-
-                foreach (var t in project.Tasks) {
-                    projectTable.AddRow(
-                        $"[bold cyan]{t.GetIdentifier()}[/]",
-                        t.Description ?? "",
-                        t.dependencies.Count > 0 ? $"[italic]{string.Join(", ", t.dependencies)}[/]" : "");
-                }
-
-                AnsiConsole.MarkupLine($"\n[bold blue]{project.Name}[/]");
-                AnsiConsole.Write(projectTable);
-            }
-        } else if (arg == "plugins") {
-            var table = new Table().Border(TableBorder.Rounded);
-            table.AddColumn(new TableColumn("[cyan]Plugin[/]"));
-            table.AddColumn(new TableColumn("[green]Version[/]"));
-            table.AddColumn(new TableColumn("[magenta]Group[/]"));
-            table.AddColumn(new TableColumn("[yellow]Path[/]"));
-            table.AddColumn(new TableColumn("[red]Author[/]"));
-            foreach (var p in ExtensionManager.GetInstance().Plugins) {
-                table.AddRow(
-                    $"[bold cyan]{p.Name}[/]",
-                    p.Version.ToString(),
-                    p.Group ?? "",
-                    Path.GetFileName(p.File) ?? "",
-                    p.Authors.Count > 0 ? Markup.Escape($"{string.Join(", ", p.Authors)}") : "");
-            }
-
-            AnsiConsole.Write(new Rule("[bold yellow]Available Plugins[/]\n").RuleStyle("grey").DoubleBorder());
-            AnsiConsole.Write(table);
-
-            extensionManager.ReleasePlugins();
-        } else {
-            AnsiConsole.MarkupLine($"[red]Unknown command: {arg}[/]");
-            AnsiConsole.MarkupLine("[yellow]Available commands: tasks, plugins[/]");
-
-            extensionManager.ReleasePlugins();
+        if (!(args.Contains("--quiet") || args.Contains("-q"))) {
+            AnsiConsole.MarkupLine(@"[blue] __  __             _ _[/]");
+            AnsiConsole.MarkupLine(@"[blue]|  \/  | __ _ _ __ (_| | __ _[/]");
+            AnsiConsole.MarkupLine(@"[blue]| |\/| |/ _` | '_ \| | |/ _` |[/]");
+            AnsiConsole.MarkupLine(@"[blue]| |  | | (_| | | | | | | (_| |[/]");
+            AnsiConsole.MarkupLine($"[blue]|_|  |_|\\__,_|_| |_|_|_|\\__,_|[/] [magenta]v{ManilaEngine.VERSION}[/]\n");
         }
 
-        return;
+        CommandApp.Configure(c => {
+            c.SetApplicationName("manila");
+            c.SetApplicationVersion(ManilaEngine.VERSION);
+            c.AddCommand<PluginsCommand>("plugins");
+            c.AddCommand<TasksCommand>("tasks");
+            c.AddCommand<RunCommand>("run");
+        });
+
+        var exitCode = CommandApp.Run(args);
+        Profiler.SaveToFile(ProfilingDir);
+        return exitCode;
     }
 }
-

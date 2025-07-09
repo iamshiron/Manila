@@ -35,12 +35,20 @@ public class Project : Component {
     public void dependencies(object obj) {
         ScriptObject sobj = (ScriptObject) obj;
         foreach (var n in sobj.PropertyIndices) {
-            _dependencies.Add(sobj[n] as Dependency);
+            if (sobj[n] is Dependency dep) {
+                _dependencies.Add(dep);
+            } else {
+                throw new InvalidCastException($"Property '{n}' is not a Dependency.");
+            }
         }
     }
 
     public Project(string name, string location, Workspace workspace) : base(location) {
         this.Name = name;
         this.Workspace = workspace;
+    }
+
+    public override string ToString() {
+        return $"Project({GetIdentifier()})";
     }
 }
