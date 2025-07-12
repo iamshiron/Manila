@@ -31,22 +31,22 @@ internal sealed class TasksCommand : Command<TasksCommand.Settings> {
         AnsiConsole.MarkupLine("\n[bold blue]Workspace Tasks[/]");
         AnsiConsole.Write(workspaceTable);
 
-        foreach (var p in engine.Workspace.Projects) {
-            var project = p.Value;
-            var projectTable = new Table().Border(TableBorder.Rounded);
-            projectTable.AddColumn(new TableColumn("[cyan]Task[/]"));
-            projectTable.AddColumn(new TableColumn("[green]Description[/]"));
-            projectTable.AddColumn(new TableColumn("[magenta]Direct Dependencies[/]"));
+        foreach (var p in engine.Workspace.Modules) {
+            var module = p.Value;
+            var moduleTable = new Table().Border(TableBorder.Rounded);
+            moduleTable.AddColumn(new TableColumn("[cyan]Task[/]"));
+            moduleTable.AddColumn(new TableColumn("[green]Description[/]"));
+            moduleTable.AddColumn(new TableColumn("[magenta]Direct Dependencies[/]"));
 
-            foreach (var t in project.Tasks) {
-                projectTable.AddRow(
+            foreach (var t in module.Tasks) {
+                moduleTable.AddRow(
                     $"[bold cyan]{t.GetIdentifier()}[/]",
                     t.Description ?? "",
                     t.Dependencies.Count > 0 ? $"[italic]{string.Join(", ", t.Dependencies)}[/]" : "");
             }
 
-            AnsiConsole.MarkupLine($"\n[bold blue]{project.Name}[/]");
-            AnsiConsole.Write(projectTable);
+            AnsiConsole.MarkupLine($"\n[bold blue]{module.Name}[/]");
+            AnsiConsole.Write(moduleTable);
         }
 
         return 0;

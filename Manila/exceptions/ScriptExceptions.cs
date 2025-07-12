@@ -12,7 +12,7 @@ public class ScriptingException : ManilaException {
 
 /// <summary>
 /// Thrown when an operation is performed in the wrong context
-/// (e.g., calling a project-specific function at the workspace level).
+/// (e.g., calling a module-specific function at the workspace level).
 /// </summary>
 public class ContextException : ScriptingException {
     /// <summary>

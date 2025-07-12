@@ -19,22 +19,22 @@ public sealed class Manila(ScriptContext context) : ExposedDynamicObject {
     private readonly BuildConfig BuildConfig = new();
 
     /// <summary>
-    /// Gets the current project in the Manila engine.
+    /// Gets the current module in the Manila engine.
     /// </summary>
-    /// <returns>The current project.</returns>
-    /// <exception cref="Exception">Thrown when not in a project context.</exception>
-    public Project getProject() {
-        if (ManilaEngine.GetInstance().CurrentProject == null) throw new ContextException(Exceptions.Context.WORKSPACE, Exceptions.Context.PROJECT);
-        return ManilaEngine.GetInstance().CurrentProject!;
+    /// <returns>The current module.</returns>
+    /// <exception cref="Exception">Thrown when not in a module context.</exception>
+    public Module getModule() {
+        if (ManilaEngine.GetInstance().CurrentModule == null) throw new ContextException(Exceptions.Context.WORKSPACE, Exceptions.Context.PROJECT);
+        return ManilaEngine.GetInstance().CurrentModule!;
     }
 
     /// <summary>
-    /// Gets an unresolved project with the specified name.
+    /// Gets an unresolved module with the specified name.
     /// </summary>
-    /// <param name="name">The name of the project to get.</param>
-    /// <returns>An unresolved project with the specified name.</returns>
-    public UnresolvedProject getProject(string name) {
-        return new UnresolvedProject(name);
+    /// <param name="name">The name of the module to get.</param>
+    /// <returns>An unresolved module with the specified name.</returns>
+    public UnresolvedModule getModule(string name) {
+        return new UnresolvedModule(name);
     }
 
     /// <summary>
@@ -70,10 +70,10 @@ public sealed class Manila(ScriptContext context) : ExposedDynamicObject {
     /// Creates a new task with the specified name.
     /// </summary>
     /// <param name="name">The name of the task to create.</param>
-    /// <returns>A new task with the specified name, associated with the current project and script context.</returns>
+    /// <returns>A new task with the specified name, associated with the current module and script context.</returns>
     public Task task(string name) {
         try {
-            return new Task(name, getProject(), Context, Context.ScriptPath);
+            return new Task(name, getModule(), Context, Context.ScriptPath);
         } catch (ContextException e) {
             if (e.Is != Exceptions.Context.WORKSPACE) throw;
             return new Task(name, getWorkspace(), Context, Context.ScriptPath);
@@ -99,7 +99,7 @@ public sealed class Manila(ScriptContext context) : ExposedDynamicObject {
     }
 
     /// <summary>
-    /// Applies the plugin component with the specified key to the current project.
+    /// Applies the plugin component with the specified key to the current module.
     /// </summary>
     /// <param name="pluginComponentKey">The key of the plugin component to apply.</param>
     public void apply(string pluginComponentKey) {
@@ -108,7 +108,7 @@ public sealed class Manila(ScriptContext context) : ExposedDynamicObject {
     }
 
     /// <summary>
-    /// Applies the plugin component specified by the script object to the current project.
+    /// Applies the plugin component specified by the script object to the current module.
     /// </summary>
     /// <param name="obj">A script object containing the group, name, component, and optional version of the plugin component to apply.</param>
     public void apply(ScriptObject obj) {
@@ -118,25 +118,25 @@ public sealed class Manila(ScriptContext context) : ExposedDynamicObject {
     }
 
     /// <summary>
-    /// Applies the specified plugin component to the current project.
+    /// Applies the specified plugin component to the current module.
     /// </summary>
-    /// <param name="component">The plugin component to apply to the current project.</param>
+    /// <param name="component">The plugin component to apply to the current module.</param>
     public void apply(PluginComponent component) {
         using (new ProfileScope(MethodBase.GetCurrentMethod()!)) {
             Logger.Debug("Applying: " + component);
-            getProject().ApplyComponent(component);
+            getModule().ApplyComponent(component);
         }
     }
 
     /// <summary>
-    /// Used for filtering projects and running actions on them.
+    /// Used for filtering modules and running actions on them.
     /// </summary>
-    /// <param name="o">The type of filter, a subclass of <see cref="ProjectFilter"/></param>
+    /// <param name="o">The type of filter, a subclass of <see cref="ModuleFilter"/></param>
     /// <param name="a">The action to run</param>
-    public void onProject(object o, dynamic a) {
+    public void onModule(object o, dynamic a) {
         using (new ProfileScope(MethodBase.GetCurrentMethod()!)) {
-            var filter = ProjectFilter.From(o);
-            getWorkspace().ProjectFilters.Add(new Tuple<ProjectFilter, Action<Project>>(filter, (project) => a(project)));
+            var filter = ModuleFilter.From(o);
+            getWorkspace().ModuleFilters.Add(new Tuple<ModuleFilter, Action<Module>>(filter, (module) => a(module)));
         }
     }
 
@@ -153,22 +153,22 @@ public sealed class Manila(ScriptContext context) : ExposedDynamicObject {
     }
 
     /// <summary>
-    /// Calls the underlying compiler to build the project
+    /// Calls the underlying compiler to build the module
     /// </summary>
     /// <param name="workspace">The workspace</param>
-    /// <param name="project">The project</param>
+    /// <param name="module">The module</param>
     /// <param name="config">The config</param>
-    public void build(Workspace workspace, Project project, BuildConfig config) {
+    public void build(Workspace workspace, Module module, BuildConfig config) {
         using (new ProfileScope(MethodBase.GetCurrentMethod()!)) {
-            project.GetLanguageComponent().Build(workspace, project, config);
+            module.GetLanguageComponent().Build(workspace, module, config);
         }
     }
-    public void run(UnresolvedProject project) {
-        run(project.Resolve());
+    public void run(UnresolvedModule module) {
+        run(module.Resolve());
     }
-    public void run(Project project) {
+    public void run(Module module) {
         using (new ProfileScope(MethodBase.GetCurrentMethod()!)) {
-            project.GetLanguageComponent().Run(project);
+            module.GetLanguageComponent().Run(module);
         }
     }
     public string getEnv(string key) {

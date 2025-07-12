@@ -44,8 +44,8 @@ public class ToolchainClang : Toolchain {
     public readonly CompileStats Stats = new();
     public readonly List<CompileCacheItem> CompileCache = [];
 
-    public ToolchainClang(Workspace workspace, Project project, BuildConfig config, bool invalidateCache = false) : base(workspace, project, config) {
-        var comp = project.GetComponent<CppComponent>();
+    public ToolchainClang(Workspace workspace, Module module, BuildConfig config, bool invalidateCache = false) : base(workspace, module, config) {
+        var comp = module.GetComponent<CppComponent>();
         _includeDirs.AddRange(comp.IncludeDirs);
         _links.AddRange(comp.Links);
 
@@ -182,7 +182,7 @@ public class ToolchainClang : Toolchain {
     /// <param name="a">Additional arguments</param>
     /// <returns>The path to the compiled file</returns>
     public string LinkFiles(List<string> files, string binDir, CppComponent comp, params string[] a) {
-        var outFile = Utils.GetBinFile(project, project.GetComponent<CppComponent>());
+        var outFile = Utils.GetBinFile(module, module.GetComponent<CppComponent>());
         List<string> args = [.. a, .. files];
 
         if (!Directory.Exists(Path.GetDirectoryName(outFile))) {
@@ -200,25 +200,25 @@ public class ToolchainClang : Toolchain {
     }
 
     /// <summary>
-    /// Builds the project using the Clang toolchain.
+    /// Builds the module using the Clang toolchain.
     /// </summary>
     /// <param name="workspace">The workspace</param>
-    /// <param name="project">The project</param>
+    /// <param name="module">The module</param>
     /// <param name="config">The build config</param>
     /// <exception cref="Exception">If anything goes kaoboom</exception>
-    public override void Build(Workspace workspace, Project project, BuildConfig config) {
+    public override void Build(Workspace workspace, Module module, BuildConfig config) {
         var instance = ManilaCPP.Instance;
-        instance.Info($"Building {project.Name} with Clang toolchain.");
+        instance.Info($"Building {module.Name} with Clang toolchain.");
 
         List<string> objectFiles = [];
-        var cppComponent = (CppComponent?) (project.HasComponent<ConsoleComponent>() ? project.GetComponent<ConsoleComponent>() : project.HasComponent<StaticLibComponent>() ? project.GetComponent<StaticLibComponent>() : null);
-        if (cppComponent == null) throw new Exception("No C++ component found in project.");
+        var cppComponent = (CppComponent?) (module.HasComponent<ConsoleComponent>() ? module.GetComponent<ConsoleComponent>() : module.HasComponent<StaticLibComponent>() ? module.GetComponent<StaticLibComponent>() : null);
+        if (cppComponent == null) throw new Exception("No C++ component found in module.");
         var objDir = cppComponent.ObjDir!;
         var binDir = cppComponent.BinDir!;
 
-        var sourceSet = project._sourceSets["main"];
+        var sourceSet = module._sourceSets["main"];
         foreach (var file in sourceSet.files()) {
-            objectFiles.Add(CompileFile(sourceSet.Root, file.Handle, Path.Join(objDir, Path.GetRelativePath(project.Path.Handle, sourceSet.Root))));
+            objectFiles.Add(CompileFile(sourceSet.Root, file.Handle, Path.Join(objDir, Path.GetRelativePath(module.Path.Handle, sourceSet.Root))));
         }
 
         LinkFiles(objectFiles, binDir, cppComponent);
@@ -226,11 +226,11 @@ public class ToolchainClang : Toolchain {
     }
 
     /// <summary>
-    /// Returns the path to the compile cache file for this project.
+    /// Returns the path to the compile cache file for this module.
     /// </summary>
     /// <returns>The compile cache file</returns>
     public string GetCompileCacheFile() {
-        return Path.Join(ManilaCPP.Instance.GetDataDir(), "clang_cache", $"{project.Name}.bin");
+        return Path.Join(ManilaCPP.Instance.GetDataDir(), "clang_cache", $"{module.Name}.bin");
     }
 
     /// <summary>

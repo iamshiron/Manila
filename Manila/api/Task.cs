@@ -53,7 +53,7 @@ public class Task : ExecutableObject {
     /// </summary>
     /// <returns>The unique identifier of the task</returns>
     public string GetIdentifier() {
-        if (Component is Project) return $"{Component.GetIdentifier()}:{Name}";
+        if (Component is Module) return $"{Component.GetIdentifier()}:{Name}";
         return Name;
 
     }

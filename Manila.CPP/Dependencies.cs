@@ -15,30 +15,30 @@ public class DependencyLink : Dependency {
         this.Path = (string) args[0];
     }
 
-    public override void Resolve(Project project) {
+    public override void Resolve(Module module) {
         throw new Exception("Link dependencies are not supported yet.");
     }
 }
 
-public class DependencyProject : Dependency {
-    public UnresolvedProject Project { get; private set; } = null!;
+public class DependencyModule : Dependency {
+    public UnresolvedModule Module { get; private set; } = null!;
     public string BuildTask { get; private set; } = string.Empty;
 
-    public DependencyProject() : base("project") {
+    public DependencyModule() : base("module") {
     }
 
     public override void Create(params object[] args) {
-        if (args.Length != 2) throw new Exception("Project dependency requires two arguments");
-        if (args[0] is not string || args[1] is not string) throw new Exception("Project dependency requires 2 string arguments");
-        this.Project = new UnresolvedProject((string) args[0]);
+        if (args.Length != 2) throw new Exception("Module dependency requires two arguments");
+        if (args[0] is not string || args[1] is not string) throw new Exception("Module dependency requires 2 string arguments");
+        this.Module = new UnresolvedModule((string) args[0]);
         this.BuildTask = (string) args[1];
     }
 
-    public override void Resolve(Project dependent) {
-        ManilaCPP.Instance.Info(string.Join(", ", ManilaEngine.GetInstance().Workspace.Projects.Keys));
+    public override void Resolve(Module dependent) {
+        ManilaCPP.Instance.Info(string.Join(", ", ManilaEngine.GetInstance().Workspace.Modules.Keys));
 
-        var dependency = this.Project.Resolve();
-        ManilaCPP.Instance.Info("Resolving Dependency Project '" + dependency.GetIdentifier() + "'...");
+        var dependency = this.Module.Resolve();
+        ManilaCPP.Instance.Info("Resolving Dependency Module '" + dependency.GetIdentifier() + "'...");
 
         var task = dependency.Workspace.GetTask(dependency, BuildTask);
         if (task == null) throw new Exception("Task not found: " + BuildTask);

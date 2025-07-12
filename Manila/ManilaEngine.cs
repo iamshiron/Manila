@@ -34,12 +34,12 @@ public sealed class ManilaEngine {
     public Workspace Workspace { get; }
 
     /// <summary>
-    /// Gets the currently executing project. This is null if no project script is running.
+    /// Gets the currently executing module. This is null if no module script is running.
     /// </summary>
-    public Project? CurrentProject { get; private set; }
+    public API.Module? CurrentModule { get; private set; }
 
     /// <summary>
-    /// Gets the script context for the currently executing project.
+    /// Gets the script context for the currently executing module.
     /// </summary>
     public ScriptContext? CurrentContext { get; private set; }
 
@@ -87,7 +87,7 @@ public sealed class ManilaEngine {
     }
 
     /// <summary>
-    /// Main entry point for the engine. Runs the workspace script and all project scripts.
+    /// Main entry point for the engine. Runs the workspace script and all module scripts.
     /// </summary>
     public async System.Threading.Tasks.Task Run() {
         if (!File.Exists("Manila.js")) {
@@ -106,14 +106,14 @@ public sealed class ManilaEngine {
             try {
                 await RunWorkspaceScript();
                 foreach (var script in files) {
-                    await RunProjectScript(script);
+                    await RunModuleScript(script);
                 }
             } catch {
                 throw;
             }
 
-            foreach (var f in Workspace!.ProjectFilters) {
-                foreach (var p in Workspace.Projects.Values) {
+            foreach (var f in Workspace!.ModuleFilters) {
+                foreach (var p in Workspace.Modules.Values) {
                     if (f.Item1.Predicate(p)) {
                         foreach (var type in p.plugins) {
                             var plugin = ExtensionManager.GetInstance().GetPlugin(type);
@@ -126,26 +126,26 @@ public sealed class ManilaEngine {
                 }
             }
 
-            Logger.Log(new ProjectsInitializedLogEntry(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - EngineCreatedTime));
+            Logger.Log(new ModulesInitializedLogEntry(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - EngineCreatedTime));
         }
     }
 
     /// <summary>
-    /// Executes a specific project script.
+    /// Executes a specific module script.
     /// </summary>
-    /// <param name="path">The relative path to the project script from the root directory.</param>
-    public async System.Threading.Tasks.Task RunProjectScript(string path) {
+    /// <param name="path">The relative path to the module script from the root directory.</param>
+    public async System.Threading.Tasks.Task RunModuleScript(string path) {
         using (new ProfileScope(MethodBase.GetCurrentMethod()!)) {
-            var projectRoot = Path.GetDirectoryName(Path.Join(Directory.GetCurrentDirectory(), path));
+            var moduleRoot = Path.GetDirectoryName(Path.Join(Directory.GetCurrentDirectory(), path));
             var scriptPath = Path.Join(Directory.GetCurrentDirectory(), path);
-            var safeProjectRoot = projectRoot ?? Directory.GetCurrentDirectory();
-            var projectName = Path.GetRelativePath(Directory.GetCurrentDirectory(), safeProjectRoot).ToLower().Replace(Path.DirectorySeparatorChar, ':');
+            var safeModuleRoot = moduleRoot ?? Directory.GetCurrentDirectory();
+            var moduleName = Path.GetRelativePath(Directory.GetCurrentDirectory(), safeModuleRoot).ToLower().Replace(Path.DirectorySeparatorChar, ':');
 
-            Logger.Log(new ProjectDiscoveredLogEntry(projectRoot!, scriptPath));
+            Logger.Log(new ModuleDiscoveredLogEntry(moduleRoot!, scriptPath));
 
-            CurrentProject = new Project(projectName, projectRoot!, Workspace);
-            Workspace!.Projects.Add(projectName, CurrentProject);
-            CurrentContext = new ScriptContext(this, CurrentProject, Path.Join(RootDir, path));
+            CurrentModule = new API.Module(moduleName, moduleRoot!, Workspace);
+            Workspace!.Modules.Add(moduleName, CurrentModule);
+            CurrentContext = new ScriptContext(this, CurrentModule, Path.Join(RootDir, path));
 
             CurrentContext.ApplyEnum<EPlatform>();
             CurrentContext.ApplyEnum<EArchitecture>();
@@ -157,9 +157,9 @@ public sealed class ManilaEngine {
                 throw;
             }
 
-            Logger.Log(new ProjectInitializedLogEntry(CurrentProject));
+            Logger.Log(new ModuleInitializedLogEntry(CurrentModule));
 
-            CurrentProject = null;
+            CurrentModule = null;
             CurrentContext = null;
         }
     }
@@ -200,7 +200,7 @@ public sealed class ManilaEngine {
                 }
                 ExecutionGraph.Attach(t, dependencies);
             }
-            foreach (var p in Workspace.Projects.Values) {
+            foreach (var p in Workspace.Modules.Values) {
                 foreach (var t in p.Tasks) {
                     List<ExecutableObject> dependencies = [];
                     foreach (var d in t.Dependencies) {

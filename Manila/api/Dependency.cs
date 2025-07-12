@@ -1,7 +1,7 @@
 namespace Shiron.Manila.API;
 
 /// <summary>
-/// Represents a dependency in a project.
+/// Represents a dependency in a module.
 /// </summary>
 public abstract class Dependency {
     public readonly string Type;
@@ -11,5 +11,5 @@ public abstract class Dependency {
     }
 
     public abstract void Create(params object[] args);
-    public abstract void Resolve(Project project);
+    public abstract void Resolve(Module module);
 }

@@ -5,11 +5,11 @@ using Shiron.Manila.Utils;
 namespace Shiron.Manila.API;
 
 /// <summary>
-/// Represents a workspace containing projects.
+/// Represents a workspace containing modules.
 /// </summary>
 public class Workspace : Component {
-    public Dictionary<string, Project> Projects { get; } = new();
-    public List<Tuple<ProjectFilter, Action<Project>>> ProjectFilters { get; } = new();
+    public Dictionary<string, Module> Modules { get; } = new();
+    public List<Tuple<ModuleFilter, Action<Module>>> ModuleFilters { get; } = new();
 
     public Workspace(string location) : base(location) {
     }
@@ -21,7 +21,7 @@ public class Workspace : Component {
     /// <returns></returns>
     public Task GetTask(string key) {
         var parts = key.Split(":");
-        if (parts.Length > 1) return GetTask(Projects[parts[0]], parts[1]);
+        if (parts.Length > 1) return GetTask(Modules[parts[0]], parts[1]);
         return GetTask(this, key);
     }
     public Task GetTask(Component component, string task) {
@@ -30,7 +30,7 @@ public class Workspace : Component {
 
     public bool HasTask(string key) {
         var parts = key.Split(":");
-        if (parts.Length > 1) return HasTask(Projects[parts[0]], parts[1]);
+        if (parts.Length > 1) return HasTask(Modules[parts[0]], parts[1]);
         return HasTask(this, key);
     }
     public bool HasTask(Component component, string key) {

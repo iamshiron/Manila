@@ -5,9 +5,9 @@ using Shiron.Manila.Ext;
 namespace Shiron.Manila.CPP;
 
 public static class Utils {
-    public static string GetBinFile(Project project, CppComponent c) {
-        string extension = c is StaticLibComponent ? ".lib" : project.HasComponent<ConsoleComponent>() ? ".exe" : ".o";
-        string binFile = project.Name + extension;
+    public static string GetBinFile(Module module, CppComponent c) {
+        string extension = c is StaticLibComponent ? ".lib" : module.HasComponent<ConsoleComponent>() ? ".exe" : ".o";
+        string binFile = module.Name + extension;
 
         return Path.Join(c.BinDir!, binFile);
     }

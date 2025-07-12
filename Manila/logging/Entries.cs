@@ -35,22 +35,22 @@ public sealed class TaskInfo(API.Task task) {
 /// Represents a snapshot of a component's information for logging.
 /// </summary>
 public sealed class ComponentInfo(Component component) {
-    public bool IsProject { get; init; } = component is Project;
+    public bool IsModule { get; init; } = component is Module;
     public bool IsWorkspace { get; init; } = component is Workspace;
     public string Root { get; init; } = component.Path.get();
     public string ID { get; init; } = component.GetIdentifier();
 }
 
 /// <summary>
-/// Represents a snapshot of a project's information for logging.
+/// Represents a snapshot of a module's information for logging.
 /// </summary>
-public sealed class ProjectInfo(Project project) {
-    public string Name { get; init; } = project.Name;
-    public string Identifier { get; init; } = project.GetIdentifier();
-    public string? Version { get; init; } = project.Version;
-    public string? Group { get; init; } = project.Group;
-    public string? Description { get; init; } = project.Description;
-    public string Root { get; init; } = project.Path.get();
+public sealed class ModuleInfo(Module module) {
+    public string Name { get; init; } = module.Name;
+    public string Identifier { get; init; } = module.GetIdentifier();
+    public string? Version { get; init; } = module.Version;
+    public string? Group { get; init; } = module.Group;
+    public string? Description { get; init; } = module.Description;
+    public string Root { get; init; } = module.Path.get();
 }
 
 /// <summary>
@@ -149,31 +149,31 @@ public class BuildFailedLogEntry(long duration, Exception e) : BaseLogEntry {
 
 #endregion
 
-#region Project & Task Discovery Log Entries
+#region Module & Task Discovery Log Entries
 
 /// <summary>
-/// Logged when projects have been fully initialized.
+/// Logged when modules have been fully initialized.
 /// </summary>
-public class ProjectsInitializedLogEntry(long duration) : BaseLogEntry {
+public class ModulesInitializedLogEntry(long duration) : BaseLogEntry {
     public override LogLevel Level => LogLevel.Info;
     public long Duration { get; } = duration;
 }
 
 /// <summary>
-/// Logged when a project is discovered from a script file.
+/// Logged when a module is discovered from a script file.
 /// </summary>
-public class ProjectDiscoveredLogEntry(string root, string script) : BaseLogEntry {
+public class ModuleDiscoveredLogEntry(string root, string script) : BaseLogEntry {
     public override LogLevel Level => LogLevel.System;
     public string Root { get; } = root;
     public string Script { get; } = script;
 }
 
 /// <summary>
-/// Logged when a discovered project is initialized.
+/// Logged when a discovered module is initialized.
 /// </summary>
-public class ProjectInitializedLogEntry(Project project) : BaseLogEntry {
+public class ModuleInitializedLogEntry(Module module) : BaseLogEntry {
     public override LogLevel Level => LogLevel.System;
-    public ProjectInfo Project { get; } = new(project);
+    public ModuleInfo Module { get; } = new(module);
 }
 
 /// <summary>

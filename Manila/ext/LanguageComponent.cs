@@ -9,6 +9,6 @@ public abstract class LanguageComponent : PluginComponent {
         return $"LanguageComponent({Name})";
     }
 
-    public abstract void Build(Workspace workspace, Project project, BuildConfig config);
-    public abstract void Run(Project project);
+    public abstract void Build(Workspace workspace, Module module, BuildConfig config);
+    public abstract void Run(Module module);
 }

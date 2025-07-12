@@ -107,8 +107,8 @@ public static class AnsiConsoleRenderer {
             case BuildFailedLogEntry log:
                 HandleBuildFailedLogEntry(log);
                 break;
-            case ProjectsInitializedLogEntry log:
-                HandleProjectsInitializedLogEntry(log);
+            case ModulesInitializedLogEntry log:
+                HandleModulesInitializedLogEntry(log);
                 break;
             case ScriptExecutionStartedLogEntry log:
                 HandleScriptExecutionStartedLogEntry(log);
@@ -131,11 +131,11 @@ public static class AnsiConsoleRenderer {
             case TaskExecutionFailedLogEntry log:
                 HandleTaskExecutionFailedLogEntry(log);
                 break;
-            case ProjectDiscoveredLogEntry log:
-                HandleProjectDiscoveredLogEntry(log);
+            case ModuleDiscoveredLogEntry log:
+                HandleModuleDiscoveredLogEntry(log);
                 break;
-            case ProjectInitializedLogEntry log:
-                HandleProjectInitializedLogEntry(log);
+            case ModuleInitializedLogEntry log:
+                HandleModuleInitializedLogEntry(log);
                 break;
             case TaskDiscoveredLogEntry log:
                 HandleTaskDiscoveredLogEntry(log);
@@ -247,7 +247,7 @@ public static class AnsiConsoleRenderer {
     private static void HandleBuildLayerCompletedLogEntry(BuildLayerCompletedLogEntry entry) {
         PushLog($"[green]{Emoji.Known.Package} Layer [yellow]{entry.LayerIndex}[/] completed![/]", entry.ParentContextID.ToString(), entry.ContextID);
     }
-    private static void HandleProjectsInitializedLogEntry(ProjectsInitializedLogEntry entry) {
+    private static void HandleModulesInitializedLogEntry(ModulesInitializedLogEntry entry) {
         Logger.Info($"Initialization took [yellow]{entry.Duration}[/]ms!");
     }
     private static void HandleScriptExecutionStartedLogEntry(ScriptExecutionStartedLogEntry entry) {
@@ -266,11 +266,11 @@ public static class AnsiConsoleRenderer {
     private static void HandleTaskExecutionFailedLogEntry(TaskExecutionFailedLogEntry entry) {
         _buildCompletion?.TrySetResult(true);
     }
-    private static void HandleProjectDiscoveredLogEntry(ProjectDiscoveredLogEntry entry) {
-        Logger.System($"Found project in {entry.Root}");
+    private static void HandleModuleDiscoveredLogEntry(ModuleDiscoveredLogEntry entry) {
+        Logger.System($"Found module in {entry.Root}");
     }
-    private static void HandleProjectInitializedLogEntry(ProjectInitializedLogEntry entry) {
-        Logger.System($"Project {entry.Project.Name} initialized!");
+    private static void HandleModuleInitializedLogEntry(ModuleInitializedLogEntry entry) {
+        Logger.System($"Module {entry.Module.Name} initialized!");
     }
     private static void HandleTaskDiscoveredLogEntry(TaskDiscoveredLogEntry entry) {
         Logger.System($"Discovered task {entry.Task.Name} for {entry.Component.Root} in {entry.Component.Root}");

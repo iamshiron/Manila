@@ -27,7 +27,7 @@ public class TaskFailedException : BuildException {
 }
 
 /// <summary>
-/// Thrown when a task with the specified key cannot be found in the workspace or project.
+/// Thrown when a task with the specified key cannot be found in the workspace or module.
 /// </summary>
 public class TaskNotFoundException : BuildException {
     /// <summary>

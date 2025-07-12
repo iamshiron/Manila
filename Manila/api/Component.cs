@@ -9,7 +9,7 @@ using Shiron.Manila.Logging;
 namespace Shiron.Manila.API;
 
 /// <summary>
-/// Represents a component in the build script. Components are used to group tasks and plugins. Can either be a workspace or a project.
+/// Represents a component in the build script. Components are used to group tasks and plugins. Can either be a workspace or a module.
 /// </summary>
 public class Component(string path) : DynamicObject, IScriptableObject {
     [ScriptProperty(true)]

@@ -6,7 +6,7 @@ using Shiron.Manila.Attributes;
 using Shiron.Manila.Utils;
 
 /// <summary>
-/// Represents a C++ console application project.
+/// Represents a C++ console application module.
 /// </summary>
 public class ConsoleComponent : CppComponent {
     public ConsoleComponent() : base("console") {
@@ -15,7 +15,7 @@ public class ConsoleComponent : CppComponent {
     [ScriptProperty]
     public DirHandle? RunDir { get; set; }
 
-    public override void Run(Project project) {
-        ShellUtils.Run(project.GetComponent<ConsoleComponent>().BinDir + "/" + project.Name + ".exe");
+    public override void Run(Module module) {
+        ShellUtils.Run(module.GetComponent<ConsoleComponent>().BinDir + "/" + module.Name + ".exe");
     }
 }

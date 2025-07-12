@@ -33,7 +33,7 @@ public sealed class ScriptContext(ManilaEngine engine, API.Component component, 
     public readonly Guid ContextID = Guid.NewGuid();
 
     /// <summary>
-    /// Project-specific environment variables that get isolated between projects
+    /// Module-specific environment variables that get isolated between modules
     /// </summary>
     private Dictionary<string, string> EnvironmentVariables { get; } = new();
 
@@ -66,20 +66,20 @@ public sealed class ScriptContext(ManilaEngine engine, API.Component component, 
     }
 
     /// <summary>
-    /// Loads environment variables from a .env file if it exists in the project directory
+    /// Loads environment variables from a .env file if it exists in the module directory
     /// </summary>
     private void LoadEnvironmentVariables() {
         using (new ProfileScope(MethodBase.GetCurrentMethod()!)) {
             // Clear any existing variables to ensure clean state
             EnvironmentVariables.Clear();
 
-            string? projectDir = Path.GetDirectoryName(ScriptPath);
-            if (projectDir == null) {
-                Logger.Warning($"Could not determine project directory for '{ScriptPath}'.");
+            string? moduleDir = Path.GetDirectoryName(ScriptPath);
+            if (moduleDir == null) {
+                Logger.Warning($"Could not determine module directory for '{ScriptPath}'.");
                 return;
             }
 
-            string envFilePath = Path.Combine(projectDir, ".env");
+            string envFilePath = Path.Combine(moduleDir, ".env");
 
             if (!File.Exists(envFilePath)) {
                 Logger.Debug($"No .env file found for '{ScriptPath}'.");
@@ -117,7 +117,7 @@ public sealed class ScriptContext(ManilaEngine engine, API.Component component, 
     }
 
     /// <summary>
-    /// Gets an environment variable, first checking project-specific variables, then system variables
+    /// Gets an environment variable, first checking module-specific variables, then system variables
     /// </summary>
     public string GetEnvironmentVariable(string key) {
         if (EnvironmentVariables.TryGetValue(key, out string? value)) {
@@ -127,7 +127,7 @@ public sealed class ScriptContext(ManilaEngine engine, API.Component component, 
     }
 
     /// <summary>
-    /// Sets a project-specific environment variable
+    /// Sets a module-specific environment variable
     /// </summary>
     public void SetEnvironmentVariable(string key, string value) {
         EnvironmentVariables[key] = value;

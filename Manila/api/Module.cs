@@ -5,9 +5,9 @@ using Shiron.Manila.Utils;
 namespace Shiron.Manila.API;
 
 /// <summary>
-/// Represents a project in the build script.
+/// Represents a module in the build script.
 /// </summary>
-public class Project : Component {
+public class Module : Component {
     [ScriptProperty(true)]
     public string Name { get; private set; }
 
@@ -43,12 +43,12 @@ public class Project : Component {
         }
     }
 
-    public Project(string name, string location, Workspace workspace) : base(location) {
+    public Module(string name, string location, Workspace workspace) : base(location) {
         this.Name = name;
         this.Workspace = workspace;
     }
 
     public override string ToString() {
-        return $"Project({GetIdentifier()})";
+        return $"Module({GetIdentifier()})";
     }
 }

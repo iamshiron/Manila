@@ -49,7 +49,7 @@ public static class ManilaCLI {
         } catch (BuildException e) {
             // build errors indicate a failure in the compilation or packaging process.
             AnsiConsole.MarkupLine($"\n[red]{Emoji.Known.CrossMark} Build Error:[/] [white]{e.Message}[/]");
-            AnsiConsole.MarkupLine("[grey]The project failed to build. Review the build configuration and source files for errors.[/]");
+            AnsiConsole.MarkupLine("[grey]The module failed to build. Review the build configuration and source files for errors.[/]");
             AnsiConsole.MarkupLine("[grey]Run with --stack-trace for a detailed technical log.[/]");
             if (settings.StackTrace) Utils.TryWriteException(e.InnerException ?? e);
 

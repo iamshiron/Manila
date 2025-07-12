@@ -6,26 +6,26 @@ using Shiron.Manila.Logging;
 namespace Shiron.Manila.API;
 
 /// <summary>
-/// Represents a filter for projects to create global configurations for specific projects.
+/// Represents a filter for modules to create global configurations for specific modules.
 /// </summary>
-public abstract class ProjectFilter {
-    public abstract bool Predicate(Project p);
+public abstract class ModuleFilter {
+    public abstract bool Predicate(Module p);
 
-    public static ProjectFilter From(object o) {
+    public static ModuleFilter From(object o) {
         Logger.Debug("From " + o.GetType());
 
         if (o is string) {
             var s = (string) o;
-            if (s == "*") return new ProjectFilterAll();
-            return new ProjectFilterName(s);
+            if (s == "*") return new ModuleFilterAll();
+            return new ModuleFilterName(s);
         }
 
         if (o is IList<object> list) {
             Logger.Debug("Array");
 
-            var filters = new ProjectFilter[list.Count];
+            var filters = new ModuleFilter[list.Count];
             for (var i = 0; i < list.Count; i++) filters[i] = From(list[i]);
-            return new ProjectFilterArray(filters);
+            return new ModuleFilterArray(filters);
         }
 
         if (o is ScriptObject obj) {
@@ -45,7 +45,7 @@ public abstract class ProjectFilter {
                 string flags = lastSlashIndex < objString.Length - 1 ? objString.Substring(lastSlashIndex + 1) : "";
 
                 Logger.Debug($"Detected regex pattern: '{pattern}', flags: '{flags}'");
-                return new ProjectFilterRegex(new Regex(pattern));
+                return new ModuleFilterRegex(new Regex(pattern));
             }
 
             try {
@@ -55,55 +55,55 @@ public abstract class ProjectFilter {
                     string pattern = dyn.source;
                     string flags = dyn.flags;
                     Logger.Debug($"Detected RegExp object with pattern: '{pattern}', flags: '{flags}'");
-                    return new ProjectFilterRegex(new Regex(pattern));
+                    return new ModuleFilterRegex(new Regex(pattern));
                 }
             } catch (Exception ex) {
                 Logger.Debug($"Error checking constructor: {ex.Message}");
             }
         }
 
-        throw new ManilaException("Invalid project filter. " + o);
+        throw new ManilaException("Invalid module filter. " + o);
     }
 }
 
-public class ProjectFilterName : ProjectFilter {
+public class ModuleFilterName : ModuleFilter {
     private readonly string _name;
 
-    public ProjectFilterName(string name) {
+    public ModuleFilterName(string name) {
         this._name = name;
     }
 
-    public override bool Predicate(Project p) {
+    public override bool Predicate(Module p) {
         return p.GetIdentifier() == _name;
     }
 }
 
-public class ProjectFilterAll : ProjectFilter {
-    public override bool Predicate(Project p) {
+public class ModuleFilterAll : ModuleFilter {
+    public override bool Predicate(Module p) {
         return true;
     }
 }
 
-public class ProjectFilterRegex : ProjectFilter {
+public class ModuleFilterRegex : ModuleFilter {
     private readonly Regex _regex;
 
-    public ProjectFilterRegex(Regex regex) {
+    public ModuleFilterRegex(Regex regex) {
         this._regex = regex;
     }
 
-    public override bool Predicate(Project p) {
+    public override bool Predicate(Module p) {
         return _regex.IsMatch(p.Name);
     }
 }
 
-public class ProjectFilterArray : ProjectFilter {
-    private readonly ProjectFilter[] _filters;
+public class ModuleFilterArray : ModuleFilter {
+    private readonly ModuleFilter[] _filters;
 
-    public ProjectFilterArray(ProjectFilter[] filters) {
+    public ModuleFilterArray(ModuleFilter[] filters) {
         this._filters = filters;
     }
 
-    public override bool Predicate(Project p) {
+    public override bool Predicate(Module p) {
         foreach (var filter in _filters) if (filter.Predicate(p)) return true;
         return false;
     }
