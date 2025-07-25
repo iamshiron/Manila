@@ -50,7 +50,7 @@ public class ZipComponent : LanguageComponent {
         }
     }
 
-    public override void Run(Project project) {
+    public override void Run(Project project, Artifact artifact) {
         throw new ManilaException("Cannot run a zip project.");
     }
 }

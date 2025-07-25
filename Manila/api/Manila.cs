@@ -184,10 +184,12 @@ public sealed class Manila(
     }
 
     /// <summary>Runs a specific, fully-resolved project's default `run` task.</summary>
-    public static void Run(ProjectScriptBridge project) => project._handle.GetLanguageComponent().Run(project._handle);
+    public void Run(ProjectScriptBridge project, UnresolvedArtifactScriptBridge artifact) =>
+        project._handle.GetLanguageComponent().Run(project._handle, artifact.Resolve());
 
     /// <summary>Resolves and runs a project's default `run` task.</summary>
-    public static void Run(UnresolvedProject project) => Run(new ProjectScriptBridge(project.Resolve()));
+    public void Run(UnresolvedProject project, UnresolvedArtifactScriptBridge artifact) =>
+        Run(new ProjectScriptBridge(project.Resolve()), artifact);
 
     /// <summary>Executes a single job by its fully qualified identifier.</summary>
     /// <param name="key">The unique identifier of the job to run.</param>
